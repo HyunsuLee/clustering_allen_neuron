@@ -4,8 +4,8 @@ for 2nd paper using allen db, clustering neurons with MLs, collaborating incheol
 
 ## Data pipeline
 
-1. preparing raw data from allen brain institute using AllenSDK [notebook](./Data_prep/allen_data_download.ipynb)
-1. Visualizing raw data using density plot [notebook](./Data_prep/allen_data_analysis.ipynb), just verification
+1. preparing raw data from allen brain institute using AllenSDK [notebook](./Data_prep/allen_data_download_2018FEB.ipynb)
+1. Visualizing raw data using density plot [notebook](./Data_prep/allen_data_visualize.ipynb), just verification
 1. Dividing data into train, test set in [rmd](./.rmd)
 
 ## LASSO, RF done by incheol

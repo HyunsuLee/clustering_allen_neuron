@@ -1,0 +1,81 @@
+---
+title: "Allen brain data diving train and test set"
+output: html_document
+author: "Incheol, Hyunsu"
+---
+
+# Dataset load
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep")
+cre <- read.csv("ephys_data_cre.csv",header=T)
+cre_na_omitted <- na.omit(cre)
+cre_na_omitted <- cre_na_omitted[-43] # cre_reporter_status 제거
+```
+
+# pulling data subset
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+Bset <- cre_na_omitted[-42]   # binary raw data
+Eset <- subset(cre_na_omitted[-44],cre_na_omitted$binary_neuron=="Excitatory")
+Iset <- subset(cre_na_omitted[-44],cre_na_omitted$binary_neuron=="Inhibitory")
+Eset$transgenic_line <- factor(Eset$transgenic_line)  # Transgenic(Excitatory) raw data
+Iset$transgenic_line <- factor(Iset$transgenic_line)  # Transgenic(Inhibitory) raw data
+```
+
+# train/test data split(stratified)
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
+library(caret)
+BindexTrain <- createDataPartition(Bset$binary_neuron, p = .8, list = F)
+Btrain <- Bset[ BindexTrain, ]
+Btest  <- Bset[-BindexTrain, ]
+
+EindexTrain <- createDataPartition(Eset$transgenic_line, p = .8, list = F)
+Etrain <- Eset[ EindexTrain, ]
+Etest  <- Eset[-EindexTrain, ]
+
+IindexTrain <- createDataPartition(Iset$transgenic_line, p = .8, list = F)
+Itrain <- Iset[ IindexTrain, ]
+Itest  <- Iset[-IindexTrain, ]
+```
+
+# Plot the probabilty plot, check the class propotion between train and test set.
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+par(mfrow = c(3, 2))
+barplot(prop.table(table(Btrain$binary))) 
+barplot(prop.table(table(Btest$binary))) 
+barplot(prop.table(table(Etrain$transgenic_line))) 
+barplot(prop.table(table(Etest$transgenic_line))) 
+barplot(prop.table(table(Itrain$transgenic_line))) 
+barplot(prop.table(table(Itest$transgenic_line))) 
+```
+
+# Draw pie chart for supple figure, stratified class division
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+require(ggplot2)
+Btrain_df <- as.data.frame(table(Btrain$binary))
+theme_set(theme_classic())
+
+DrawPieChart <- function(data_class){
+  df <- as.data.frame(table(data_class))
+  data_title <- deparse(substitute(data_class))
+  return(ggplot(df, aes(x = "", y = Freq, fill = factor(data_class))) +
+           geom_bar(width = 1, stat = "identity") +
+           theme(axis.line = element_blank(), plot.title = element_text(hjust=0.5)) +
+           labs(fill="", x=NULL, y=NULL, title= data_title) +
+           coord_polar(theta = "y", start = 0))
+}
+
+Btra_pie <- DrawPieChart(Btrain$binary)
+Btra_pie
+Btes_pie <- DrawPieChart(Btest$binary)
+Btes_pie
+Etra_pie <- DrawPieChart(Etrain$transgenic_line)
+Etra_pie
+Etes_pie <- DrawPieChart(Etest$transgenic_line)
+Etes_pie
+Itra_pie <- DrawPieChart(Itrain$transgenic_line)
+Itra_pie
+Ites_pie <- DrawPieChart(Itest$transgenic_line)
+Ites_pie
+```
+
