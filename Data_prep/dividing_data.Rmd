@@ -61,7 +61,10 @@ DrawPieChart <- function(data_class){
   return(ggplot(df, aes(x = "", y = Freq, 
                         fill = factor(data_class))) +
            geom_bar(width = 1, stat = "identity") +
-           theme(axis.line = element_blank(), plot.title = element_text(hjust=0.5)) +
+           theme(axis.line = element_blank(), 
+                 plot.title = element_text(hjust=0.5),
+                # axis.text.x=element_blank(), 
+                 axis.ticks = element_blank()) +
            labs(fill="", x=NULL, y=NULL, title= data_title) +
            coord_polar(theta = "y", start = 0) +
            scale_fill_brewer(palette = "RdYlBu"))
