@@ -53,29 +53,34 @@ barplot(prop.table(table(Itest$transgenic_line)))
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 require(ggplot2)
 Btrain_df <- as.data.frame(table(Btrain$binary))
-theme_set(theme_classic())
+ # theme_set(theme_classic())
 
 DrawPieChart <- function(data_class){
   df <- as.data.frame(table(data_class))
   data_title <- deparse(substitute(data_class))
-  return(ggplot(df, aes(x = "", y = Freq, fill = factor(data_class))) +
+  return(ggplot(df, aes(x = "", y = Freq, 
+                        fill = factor(data_class))) +
            geom_bar(width = 1, stat = "identity") +
            theme(axis.line = element_blank(), plot.title = element_text(hjust=0.5)) +
            labs(fill="", x=NULL, y=NULL, title= data_title) +
-           coord_polar(theta = "y", start = 0))
+           coord_polar(theta = "y", start = 0) +
+           scale_fill_brewer(palette = "RdYlBu"))
 }
 
 Btra_pie <- DrawPieChart(Btrain$binary)
-Btra_pie
 Btes_pie <- DrawPieChart(Btest$binary)
-Btes_pie
 Etra_pie <- DrawPieChart(Etrain$transgenic_line)
-Etra_pie
 Etes_pie <- DrawPieChart(Etest$transgenic_line)
-Etes_pie
 Itra_pie <- DrawPieChart(Itrain$transgenic_line)
-Itra_pie
 Ites_pie <- DrawPieChart(Itest$transgenic_line)
-Ites_pie
+
+require(grid)
+require(gridExtra)
+require(Cairo)
+
+pie <- grid.arrange(Btra_pie,Btes_pie,Etra_pie,Etes_pie,Itra_pie,Ites_pie,
+                    ncol=2)
+ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =300)
 ```
+
 

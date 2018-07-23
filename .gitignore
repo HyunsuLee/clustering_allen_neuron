@@ -106,3 +106,4 @@ venv.bak/
 # R stuff
 .RData
 .Rhistory
+*.tiff
