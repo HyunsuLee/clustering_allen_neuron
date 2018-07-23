@@ -86,4 +86,76 @@ pie <- grid.arrange(Btra_pie,Btes_pie,Etra_pie,Etes_pie,Itra_pie,Ites_pie,
 ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =300)
 ```
 
+# subset data generation according to electrophysiological stimuli method
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+subsetgeneration <-function(dataset, type) {
+  if (type=="l") return(dataset[-c(5,6,8,9,13,14,16,17,20,21,23,24,26,27,29,30,32,33,35,36,38,39)])
+  if (type=="s") return(dataset[-c(4,5,7,8,12,13,15,16,22,23,25,26,28,29,31,32,34,35,37,38)])
+  if (type=="r") return(dataset[-c(4,6,7,9,12,14,15,17,20,21,22,24,25,27,28,30,31,33,34,36,37,39)])
+}
+
+Btrain.l <- subsetgeneration(Btrain,"l")
+Btrain.s <- subsetgeneration(Btrain,"s")
+Btrain.r <- subsetgeneration(Btrain,"r")
+
+Btest.l <- subsetgeneration(Btest,"l")
+Btest.s <- subsetgeneration(Btest,"s")
+Btest.r <- subsetgeneration(Btest,"r")
+
+Etrain.l <- subsetgeneration(Etrain,"l")
+Etrain.s <- subsetgeneration(Etrain,"s")
+Etrain.r <- subsetgeneration(Etrain,"r")
+
+Etest.l <- subsetgeneration(Etest,"l")
+Etest.s <- subsetgeneration(Etest,"s")
+Etest.r <- subsetgeneration(Etest,"r")
+
+Itrain.l <- subsetgeneration(Itrain,"l")
+Itrain.s <- subsetgeneration(Itrain,"s")
+Itrain.r <- subsetgeneration(Itrain,"r")
+
+Itest.l <- subsetgeneration(Itest,"l")
+Itest.s <- subsetgeneration(Itest,"s")
+Itest.r <- subsetgeneration(Itest,"r")
+
+```
+
+# write divided data into csv file
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+setwd("./divided_data/")
+write.csv(Btrain,"Btrain.csv")
+write.csv(Btrain.l,"Btrain_long.csv")
+write.csv(Btrain.s,"Btrain_short.csv")
+write.csv(Btrain.r,"Btrain_ramp.csv")
+
+write.csv(Btest,"Btest.csv")
+write.csv(Btest.l,"Btest_long.csv")
+write.csv(Btest.s,"Btest_short.csv")
+write.csv(Btest.r,"Btest_ramp.csv")
+
+write.csv(Etrain,"Etrain.csv")
+write.csv(Etrain.l,"Etrain_long.csv")
+write.csv(Etrain.s,"Etrain_short.csv")
+write.csv(Etrain.r,"Etrain_ramp.csv")
+
+write.csv(Etest,"Etest.csv")
+write.csv(Etest.l,"Etest_long.csv")
+write.csv(Etest.s,"Etest_short.csv")
+write.csv(Etest.r,"Etest_ramp.csv")
+
+write.csv(Itrain,"Itrain.csv")
+write.csv(Itrain.l,"Itrain_long.csv")
+write.csv(Itrain.s,"Itrain_short.csv")
+write.csv(Itrain.r,"Itrain_ramp.csv")
+
+write.csv(Itest,"Itest.csv")
+write.csv(Itest.l,"Itest_long.csv")
+write.csv(Itest.s,"Itest_short.csv")
+write.csv(Itest.r,"Itest_ramp.csv")
+```
+
+```
+
+
+
 
