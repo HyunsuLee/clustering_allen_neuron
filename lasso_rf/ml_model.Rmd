@@ -1,0 +1,178 @@
+---
+title: "ML model making(LASSO and RF)"
+author: "incheol, hyunsu"
+date: "July 24, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data load
+
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+
+cre_na_omitted <- read.csv("cre_na_omitted.csv")
+
+Btrain		<- read.csv("Btrain.csv")
+Btrain.l	<- read.csv("Btrain_long.csv")
+Btrain.s	<- read.csv("Btrain_short.csv")
+Btrain.r	<- read.csv("Btrain_ramp.csv")
+
+Btest		<- read.csv("Btest.csv")
+Btest.l		<- read.csv("Btest_long.csv")
+Btest.s		<- read.csv("Btest_short.csv")
+Btest.r		<- read.csv("Btest_ramp.csv")
+
+Etrain		<- read.csv("Etrain.csv")
+Etrain.l	<- read.csv("Etrain_long.csv")
+Etrain.s	<- read.csv("Etrain_short.csv")
+Etrain.r	<- read.csv("Etrain_ramp.csv")
+
+Etest		<- read.csv("Etest.csv")
+Etest.l		<- read.csv("Etest_long.csv")
+Etest.s		<- read.csv("Etest_short.csv")
+Etest.r		<- read.csv("Etest_ramp.csv")
+
+Itrain		<- read.csv("Itrain.csv")
+Itrain.l	<- read.csv("Itrain_long.csv")
+Itrain.s	<- read.csv("Itrain_short.csv")
+Itrain.r	<- read.csv("Itrain_ramp.csv")
+
+Itest		<- read.csv("Itest.csv")
+Itest.l		<- read.csv("Itest_long.csv")
+Itest.s		<- read.csv("Itest_short.csv")
+Itest.r		<- read.csv("Itest_ramp.csv")
+```
+
+# Factor add to test set of excitatory line
+```{r, message=FALSE, warning=FALSE}
+levels(Etest$transgenic_line) <- c(levels(Etest$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.l$transgenic_line) <- c(levels(Etest.l$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.s$transgenic_line) <- c(levels(Etest.s$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IRES-Cre")
+
+```
+
+# Binary prediction (E vs I)
+```{r, message=FALSE, warning=FALSE}
+require(ROCR)
+x.conven <- cre_na_omitted$firing_rate # Firing rate are normally adapted for fearture classification E vs I.
+preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # conversion to probability
+
+conventional.pred = prediction(preds,cre_na_omitted$binary_neuron)
+conventional.perf = performance(conventional.pred,"tpr","fpr")
+```
+
+# set Cross-validation as k-fold
+```{r}
+require(caret)
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+noCV <- trainControl(method = "none")
+
+tuneGrid <- expand.grid(alpha = 1, lambda = seq(0.0001, 1, length = 10))
+noGrid <- expand.grid(alpha = 1, lambda = 0.01)
+```
+
+# LASSO training
+```{r}
+doMC::registerDoMC(cores = 4) # multi core 이용 연산
+
+B.reg.full.cv <- caret::train(binary_neuron ~ ., data = Btrain, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+B.reg.full.nocv <-caret::train(binary_neuron ~ ., data = Btrain, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+B.reg.long.cv <- caret::train(binary_neuron ~ ., data = Btrain.l, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+B.reg.long.nocv <-caret::train(binary_neuron ~ ., data = Btrain.l, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+B.reg.short.cv <- caret::train(binary_neuron ~ ., data = Btrain.s, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+B.reg.short.nocv <-caret::train(binary_neuron ~ ., data = Btrain.s, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+B.reg.ramp.cv <- caret::train(binary_neuron ~ ., data = Btrain.r, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+B.reg.ramp.nocv <-caret::train(binary_neuron ~ ., data = Btrain.r, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+```
+
+# Prediction accuracy of LASSO model
+```{r}
+library(magrittr)
+
+cat("\n\n\n--------- Binary prediction / Full model / LASSO with CV ----------\n")
+a<-predict(B.reg.full.cv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Full model / LASSO without CV ----------\n")
+a<-predict(B.reg.full.nocv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Long model / LASSO with CV ----------\n")
+a<-predict(B.reg.long.cv, newdata = Btest.l) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Long model / LASSO without CV ----------\n")
+a<-predict(B.reg.long.nocv, newdata = Btest.l) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Short model / LASSO with CV ----------\n")
+a<-predict(B.reg.short.cv, newdata = Btest.s) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Short model / LASSO without CV ----------\n")
+a<-predict(B.reg.short.nocv, newdata = Btest.s) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Ramp model / LASSO with CV ----------\n")
+a<-predict(B.reg.ramp.cv, newdata = Btest.r) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Ramp model / LASSO without CV ----------\n")
+a<-predict(B.reg.ramp.nocv, newdata = Btest.r) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+```
+
+# ROC curve & AUC
+```{r}
+# ROC curve & AUC
+Broc <- function(model,dataset) {
+preds = predict(model,type="prob",newdata=dataset)[,2]
+pred = prediction(preds,Btest$binary_neuron)
+au<-performance(pred,"auc")
+cat(substitute(model),": ",au@y.values[[1]],"\n")
+return(performance(pred,"tpr","fpr"))
+}
+
+# Plotting ROC Curves
+plot(conventional.perf,col=2,lwd=0.5,main="ROC Curves (LASSO)")
+plot(Broc(B.reg.full.cv,Btest),col=3,lwd=0.5,add=T)
+plot(Broc(B.reg.full.nocv,Btest),col=4,lwd=0.5,add=T)
+plot(Broc(B.reg.long.cv,Btest.l),col=5,lwd=0.5,add=T)
+plot(Broc(B.reg.long.nocv,Btest.l),col=6,lwd=0.5,add=T)
+plot(Broc(B.reg.short.cv,Btest.s),col=7,lwd=0.5,add=T)
+plot(Broc(B.reg.short.nocv,Btest.s),col=8,lwd=0.5,add=T)
+plot(Broc(B.reg.ramp.cv,Btest.r),col=9,lwd=0.5,add=T)
+plot(Broc(B.reg.ramp.nocv,Btest.r),col=10,lwd=0.5,add=T)
+abline(a=0,b=1,lwd=1,lty=2,col="gray")
+legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","full_CV","full_noCV","long_CV","long_noCV","short_CV","short_noCV","ramp_CV","ramp_noCV"),bty='n') 
+```
+AUC 기준으로 볼떄 no CV가 CV 보다 항상 우수함
+subset 단위에서는 AUC 기준으로 ramp -> short -> long 순서
+
+
+
+

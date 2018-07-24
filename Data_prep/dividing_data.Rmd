@@ -122,7 +122,8 @@ Itest.r <- subsetgeneration(Itest,"r")
 
 # write divided data into csv file
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-setwd("./divided_data/")
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+write.csv(cre_na_omitted, "cre_na_omitted.csv")
 write.csv(Btrain,"Btrain.csv")
 write.csv(Btrain.l,"Btrain_long.csv")
 write.csv(Btrain.s,"Btrain_short.csv")
