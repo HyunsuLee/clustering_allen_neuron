@@ -154,8 +154,6 @@ write.csv(Itest.s,"Itest_short.csv")
 write.csv(Itest.r,"Itest_ramp.csv")
 ```
 
-```
-
 
 
 
