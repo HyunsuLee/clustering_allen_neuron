@@ -15,8 +15,8 @@ cre_na_omitted <- cre_na_omitted[-43] # cre_reporter_status 제거
 # pulling data subset
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 Bset <- cre_na_omitted[-42]   # binary raw data
-Eset <- subset(cre_na_omitted[-44],cre_na_omitted$binary_neuron=="Excitatory")
-Iset <- subset(cre_na_omitted[-44],cre_na_omitted$binary_neuron=="Inhibitory")
+Eset <- subset(cre_na_omitted[-45],cre_na_omitted$binary_neuron=="Excitatory")
+Iset <- subset(cre_na_omitted[-45],cre_na_omitted$binary_neuron=="Inhibitory")
 Eset$transgenic_line <- factor(Eset$transgenic_line)  # Transgenic(Excitatory) raw data
 Iset$transgenic_line <- factor(Iset$transgenic_line)  # Transgenic(Inhibitory) raw data
 ```

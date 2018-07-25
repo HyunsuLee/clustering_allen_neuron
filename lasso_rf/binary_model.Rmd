@@ -14,49 +14,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE, warning=FALSE}
 setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
 
-cre_na_omitted <- read.csv("cre_na_omitted.csv")
+cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
 
-Btrain		<- read.csv("Btrain.csv")
-Btrain.l	<- read.csv("Btrain_long.csv")
-Btrain.s	<- read.csv("Btrain_short.csv")
-Btrain.r	<- read.csv("Btrain_ramp.csv")
+Btrain		<- read.csv("Btrain.csv", row.names = "X")
+Btrain.l	<- read.csv("Btrain_long.csv", row.names = "X")
+Btrain.s	<- read.csv("Btrain_short.csv", row.names = "X")
+Btrain.r	<- read.csv("Btrain_ramp.csv", row.names = "X")
 
-Btest		<- read.csv("Btest.csv")
-Btest.l		<- read.csv("Btest_long.csv")
-Btest.s		<- read.csv("Btest_short.csv")
-Btest.r		<- read.csv("Btest_ramp.csv")
-'
-Etrain		<- read.csv("Etrain.csv")
-Etrain.l	<- read.csv("Etrain_long.csv")
-Etrain.s	<- read.csv("Etrain_short.csv")
-Etrain.r	<- read.csv("Etrain_ramp.csv")
-
-Etest		<- read.csv("Etest.csv")
-Etest.l		<- read.csv("Etest_long.csv")
-Etest.s		<- read.csv("Etest_short.csv")
-Etest.r		<- read.csv("Etest_ramp.csv")
-
-Itrain		<- read.csv("Itrain.csv")
-Itrain.l	<- read.csv("Itrain_long.csv")
-Itrain.s	<- read.csv("Itrain_short.csv")
-Itrain.r	<- read.csv("Itrain_ramp.csv")
-
-Itest		<- read.csv("Itest.csv")
-Itest.l		<- read.csv("Itest_long.csv")
-Itest.s		<- read.csv("Itest_short.csv")
-Itest.r		<- read.csv("Itest_ramp.csv")
-'
-```
-
-# Factor add to test set of excitatory line
-```{r, message=FALSE, warning=FALSE}
-'
-levels(Etest$transgenic_line) <- c(levels(Etest$transgenic_line),"Slc17a6-IRES-Cre")
-levels(Etest.l$transgenic_line) <- c(levels(Etest.l$transgenic_line),"Slc17a6-IRES-Cre")
-levels(Etest.s$transgenic_line) <- c(levels(Etest.s$transgenic_line),"Slc17a6-IRES-Cre")
-levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IRES-Cre")
-'
-
+Btest		<- read.csv("Btest.csv", row.names = "X")
+Btest.l		<- read.csv("Btest_long.csv", row.names = "X")
+Btest.s		<- read.csv("Btest_short.csv", row.names = "X")
+Btest.r		<- read.csv("Btest_ramp.csv", row.names = "X")
 ```
 
 # Binary prediction (E vs I)

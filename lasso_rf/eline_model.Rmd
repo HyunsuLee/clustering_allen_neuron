@@ -1,0 +1,65 @@
+---
+title: "excitatory line classification LASSO and RF"
+author: "incheol, hyunsu"
+date: "July 25, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data load
+
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+
+Etrain		<- read.csv("Etrain.csv", row.names = "X")
+Etrain.l	<- read.csv("Etrain_long.csv", row.names = "X")
+Etrain.s	<- read.csv("Etrain_short.csv", row.names = "X")
+Etrain.r	<- read.csv("Etrain_ramp.csv", row.names = "X")
+
+Etest		<- read.csv("Etest.csv", row.names = "X")
+Etest.l		<- read.csv("Etest_long.csv", row.names = "X")
+Etest.s		<- read.csv("Etest_short.csv", row.names = "X")
+Etest.r		<- read.csv("Etest_ramp.csv", row.names = "X")
+```
+
+# Factor add to test set of excitatory line
+```{r, message=FALSE, warning=FALSE}
+levels(Etest$transgenic_line) <- c(levels(Etest$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.l$transgenic_line) <- c(levels(Etest.l$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.s$transgenic_line) <- c(levels(Etest.s$transgenic_line),"Slc17a6-IRES-Cre")
+levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IRES-Cre")
+```
+
+# set Cross-validation as k-fold
+```{r, message=FALSE, warning=FALSE}
+require(caret)
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+noCV <- trainControl(method = "none")
+
+tuneGrid <- expand.grid(alpha = 1, lambda = seq(0.0001, 1, length = 10))
+noGrid <- expand.grid(alpha = 1, lambda = 0.01)
+```
+
+# LASSO training 
+```{r, message=FALSE, warning=FALSE}
+require(caret)
+
+doMC::registerDoMC(cores = 4) # multi core calculation
+
+E.reg.full.cv <- caret::train(transgenic_line ~ ., data = Etrain, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+E.reg.full.nocv <-caret::train(transgenic_line ~ ., data = Etrain, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+E.reg.long.cv <- caret::train(transgenic_line ~ ., data = Etrain.l, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+E.reg.long.nocv <-caret::train(transgenic_line ~ ., data = Etrain.l, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+E.reg.short.cv <- caret::train(transgenic_line ~ ., data = Etrain.s, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+E.reg.short.nocv <-caret::train(transgenic_line ~ ., data = Etrain.s, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+E.reg.ramp.cv <- caret::train(transgenic_line ~ ., data = Etrain.r, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+E.reg.ramp.nocv <-caret::train(transgenic_line ~ ., data = Etrain.r, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+```
+
