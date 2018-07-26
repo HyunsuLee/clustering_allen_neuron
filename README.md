@@ -11,6 +11,8 @@ for 2nd paper using allen db, clustering neurons with MLs, collaborating incheol
 ## LASSO, RF done by incheol
 
 1. For binary classification in [rmd](./lasso_rf/binary_model.Rmd), excitatory line classification in [rmd](./lasso_rf/eline_model.Rmd), and inhibitory line classification in [rmd](./lasso_rf/iline_model.Rmd).
+1. models saved in ./lasso_rf/R_models/
+1. reload models test in [rmd](./lasso_rf/reload_model_test.Rmd)
 
 ## ANN learning pipeline
 
