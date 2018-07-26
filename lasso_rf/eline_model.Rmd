@@ -49,6 +49,8 @@ require(caret)
 
 doMC::registerDoMC(cores = 4) # multi core calculation
 
+set.seed(849)
+
 E.reg.full.cv <- caret::train(transgenic_line ~ ., data = Etrain, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
 E.reg.full.nocv <-caret::train(transgenic_line ~ ., data = Etrain, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
 
@@ -60,6 +62,163 @@ E.reg.short.nocv <-caret::train(transgenic_line ~ ., data = Etrain.s, method = "
 
 E.reg.ramp.cv <- caret::train(transgenic_line ~ ., data = Etrain.r, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
 E.reg.ramp.nocv <-caret::train(transgenic_line ~ ., data = Etrain.r, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+```
+
+# Confusion matrix and predictio accuracy
+```{r, message=FALSE, warning=FALSE}
+library(magrittr)
+
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Full model / LASSO with CV ----------\n")
+a<-predict(E.reg.full.cv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Full model / LASSO without CV ----------\n")
+a<-predict(E.reg.full.nocv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Long model / LASSO with CV ----------\n")
+a<-predict(E.reg.long.cv, newdata = Etest.l) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Long model / LASSO without CV ----------\n")
+a<-predict(E.reg.long.nocv, newdata = Etest.l) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Short model / LASSO with CV ----------\n")
+a<-predict(E.reg.short.cv, newdata = Etest.s) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Short model / LASSO without CV ----------\n")
+a<-predict(E.reg.short.nocv, newdata = Etest.s) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Ramp model / LASSO with CV ----------\n")
+a<-predict(E.reg.ramp.cv, newdata = Etest.r) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Excitatory prediction / Ramp model / LASSO without CV ----------\n")
+a<-predict(E.reg.ramp.nocv, newdata = Etest.r) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+```
+
+# Random forest training
+```{r, message=FALSE, warning=FALSE}
+doMC::registerDoMC(cores = 4) # multi core calculation
+
+set.seed(849)
+
+E.rf.full.cv <- caret::train(transgenic_line ~ ., data = Etrain, method = "rf", trControl = fitControl)
+E.rf.full.nocv <-caret::train(transgenic_line ~ ., data = Etrain, method = "rf", trControl = noCV)
+
+E.rf.long.cv <- caret::train(transgenic_line ~ ., data = Etrain.l, method = "rf", trControl = fitControl)
+E.rf.long.nocv <-caret::train(transgenic_line ~ ., data = Etrain.l, method = "rf", trControl = noCV)
+
+E.rf.short.cv <- caret::train(transgenic_line ~ ., data = Etrain.s, method = "rf", trControl = fitControl)
+E.rf.short.nocv <-caret::train(transgenic_line ~ ., data = Etrain.s, method = "rf", trControl = noCV)
+
+E.rf.ramp.cv <- caret::train(transgenic_line ~ ., data = Etrain.r, method = "rf", trControl = fitControl)
+E.rf.ramp.nocv <-caret::train(transgenic_line ~ ., data = Etrain.r, method = "rf", trControl = noCV)
+```
+
+
+# Confusion matrix and prediction accuracy of RF
+```{r, message=FALSE, warning=FALSE}
+library(magrittr)
+
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Full model / RANDOM FOREST with CV ----------\n")
+a<-predict(E.rf.full.cv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Full model / RANDOM FOREST without CV ----------\n")
+a<-predict(E.rf.full.nocv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Long model / RANDOM FOREST with CV ----------\n")
+a<-predict(E.rf.long.cv, newdata = Etest.l) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Long model / RANDOM FOREST without CV ----------\n")
+a<-predict(E.rf.long.nocv, newdata = Etest.l) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Short model / RANDOM FOREST with CV ----------\n")
+a<-predict(E.rf.short.cv, newdata = Etest.s) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Short model / RANDOM FOREST without CV ----------\n")
+a<-predict(E.rf.short.nocv, newdata = Etest.s) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Ramp model / RANDOM FOREST with CV ----------\n")
+a<-predict(E.rf.ramp.cv, newdata = Etest.r) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Excitatory prediction / Ramp model / RANDOM FOREST without CV ----------\n")
+a<-predict(E.rf.ramp.nocv, newdata = Etest.r) %>% confusionMatrix(Etest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+```
+
+# Saving models
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
+save(E.reg.full.cv, file = "./R_models/E.reg.full.cv.rda")
+save(E.reg.full.nocv, file = "./R_models/E.reg.full.nocv.rda")
+
+save(E.reg.long.cv, file = "./R_models/E.reg.long.cv.rda")
+save(E.reg.long.nocv, file = "./R_models/E.reg.long.nocv.rda")
+
+save(E.reg.short.cv, file = "./R_models/E.reg.short.cv.rda")
+save(E.reg.short.nocv, file = "./R_models/E.reg.short.nocv.rda")
+
+save(E.reg.ramp.cv, file = "./R_models/E.reg.ramp.cv.rda")
+save(E.reg.ramp.nocv, file = "./R_models/E.reg.ramp.nocv.rda")
+
+save(E.rf.full.cv, file = "./R_models/E.rf.full.cv.rda")
+save(E.rf.full.nocv, file = "./R_models/E.rf.full.nocv.rda")
+
+save(E.rf.long.cv, file = "./R_models/E.rf.long.cv.rda")
+save(E.rf.long.nocv, file = "./R_models/E.rf.long.nocv.rda")
+
+save(E.rf.short.cv, file = "./R_models/E.rf.short.cv.rda")
+save(E.rf.short.nocv, file = "./R_models/E.rf.short.nocv.rda")
+
+save(E.rf.ramp.cv, file = "./R_models/E.rf.ramp.cv.rda")
+save(E.rf.ramp.nocv, file = "./R_models/E.rf.ramp.nocv.rda")
 
 ```
 

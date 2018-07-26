@@ -1,0 +1,216 @@
+---
+title: "inhibitory line classification LASSO and RF"
+author: "incheol, hyunsu"
+date: "July 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data load
+
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+
+Itrain		<- read.csv("Itrain.csv", row.names = "X")
+Itrain.l	<- read.csv("Itrain_long.csv", row.names = "X")
+Itrain.s	<- read.csv("Itrain_short.csv", row.names = "X")
+Itrain.r	<- read.csv("Itrain_ramp.csv", row.names = "X")
+
+Itest		<- read.csv("Itest.csv", row.names = "X")
+Itest.l		<- read.csv("Itest_long.csv", row.names = "X")
+Itest.s		<- read.csv("Itest_short.csv", row.names = "X")
+Itest.r		<- read.csv("Itest_ramp.csv", row.names = "X")
+```
+
+
+# set Cross-validation as k-fold
+```{r, message=FALSE, warning=FALSE}
+require(caret)
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+noCV <- trainControl(method = "none")
+
+tuneGrid <- expand.grid(alpha = 1, lambda = seq(0.0001, 1, length = 10))
+noGrid <- expand.grid(alpha = 1, lambda = 0.01)
+```
+
+# LASSO traning
+```{r, message=FALSE, warning=FALSE}
+doMC::registerDoMC(cores = 4) # multi core calculation
+
+set.seed(849)
+
+I.reg.full.cv <- caret::train(transgenic_line ~ ., data = Itrain, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+I.reg.full.nocv <-caret::train(transgenic_line ~ ., data = Itrain, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+I.reg.long.cv <- caret::train(transgenic_line ~ ., data = Itrain.l, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+I.reg.long.nocv <-caret::train(transgenic_line ~ ., data = Itrain.l, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+I.reg.short.cv <- caret::train(transgenic_line ~ ., data = Itrain.s, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+I.reg.short.nocv <-caret::train(transgenic_line ~ ., data = Itrain.s, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+
+I.reg.ramp.cv <- caret::train(transgenic_line ~ ., data = Itrain.r, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
+I.reg.ramp.nocv <-caret::train(transgenic_line ~ ., data = Itrain.r, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
+```
+
+# Confusion matrix and Prediction accuracy
+```{r, message=FALSE, warning=FALSE}
+
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Full model / LASSO with CV ----------\n")
+a<-predict(I.reg.full.cv, newdata = Itest) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Full model / LASSO without CV ----------\n")
+a<-predict(I.reg.full.nocv, newdata = Itest) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Long model / LASSO with CV ----------\n")
+a<-predict(I.reg.long.cv, newdata = Itest.l) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Long model / LASSO without CV ----------\n")
+a<-predict(I.reg.long.nocv, newdata = Itest.l) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Short model / LASSO with CV ----------\n")
+a<-predict(I.reg.short.cv, newdata = Itest.s) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Short model / LASSO without CV ----------\n")
+a<-predict(I.reg.short.nocv, newdata = Itest.s) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Ramp model / LASSO with CV ----------\n")
+a<-predict(I.reg.ramp.cv, newdata = Itest.r) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic_line Inhibitory prediction / Ramp model / LASSO without CV ----------\n")
+a<-predict(I.reg.ramp.nocv, newdata = Itest.r) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+
+```
+
+
+# Random Forest training
+```{r, message=FALSE, warning=FALSE}
+doMC::registerDoMC(cores = 4) # multi core calculation
+
+set.seed(849)
+
+I.rf.full.cv <- caret::train(transgenic_line ~ ., data = Itrain, method = "rf", trControl = fitControl)
+I.rf.full.nocv <-caret::train(transgenic_line ~ ., data = Itrain, method = "rf", trControl = noCV)
+
+I.rf.long.cv <- caret::train(transgenic_line ~ ., data = Itrain.l, method = "rf", trControl = fitControl)
+I.rf.long.nocv <-caret::train(transgenic_line ~ ., data = Itrain.l, method = "rf", trControl = noCV)
+
+I.rf.short.cv <- caret::train(transgenic_line ~ ., data = Itrain.s, method = "rf", trControl = fitControl)
+I.rf.short.nocv <-caret::train(transgenic_line ~ ., data = Itrain.s, method = "rf", trControl = noCV)
+
+I.rf.ramp.cv <- caret::train(transgenic_line ~ ., data = Itrain.r, method = "rf", trControl = fitControl)
+I.rf.ramp.nocv <-caret::train(transgenic_line ~ ., data = Itrain.r, method = "rf", trControl = noCV)
+
+```
+
+
+# Confusion matrix and Prediction accuracy
+```{r, message=FALSE, warning=FALSE}
+library(magrittr)
+
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Full model / RANDOM FOREST with CV ----------\n")
+a<-predict(I.rf.full.cv, newdata = Itest) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Full model / RANDOM FOREST without CV ----------\n")
+a<-predict(I.rf.full.nocv, newdata = Itest) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Long model / RANDOM FOREST with CV ----------\n")
+a<-predict(I.rf.long.cv, newdata = Itest.l) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Long model / RANDOM FOREST without CV ----------\n")
+a<-predict(I.rf.long.nocv, newdata = Itest.l) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Short model / RANDOM FOREST with CV ----------\n")
+a<-predict(I.rf.short.cv, newdata = Itest.s) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Short model / RANDOM FOREST without CV ----------\n")
+a<-predict(I.rf.short.nocv, newdata = Itest.s) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Ramp model / RANDOM FOREST with CV ----------\n")
+a<-predict(I.rf.ramp.cv, newdata = Itest.r) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Transgenic line Inhibitory prediction / Ramp model / RANDOM FOREST without CV ----------\n")
+a<-predict(I.rf.ramp.nocv, newdata = Itest.r) %>% confusionMatrix(Itest$transgenic_line)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+```
+
+# Saving models
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
+save(I.reg.full.cv, file = "./R_models/I.reg.full.cv.rda")
+save(I.reg.full.nocv, file = "./R_models/I.reg.full.nocv.rda")
+
+save(I.reg.long.cv, file = "./R_models/I.reg.long.cv.rda")
+save(I.reg.long.nocv, file = "./R_models/I.reg.long.nocv.rda")
+
+save(I.reg.short.cv, file = "./R_models/I.reg.short.cv.rda")
+save(I.reg.short.nocv, file = "./R_models/I.reg.short.nocv.rda")
+
+save(I.reg.ramp.cv, file = "./R_models/I.reg.ramp.cv.rda")
+save(I.reg.ramp.nocv, file = "./R_models/I.reg.ramp.nocv.rda")
+
+save(I.rf.full.cv, file = "./R_models/I.rf.full.cv.rda")
+save(I.rf.full.nocv, file = "./R_models/I.rf.full.nocv.rda")
+
+save(I.rf.long.cv, file = "./R_models/I.rf.long.cv.rda")
+save(I.rf.long.nocv, file = "./R_models/I.rf.long.nocv.rda")
+
+save(I.rf.short.cv, file = "./R_models/I.rf.short.cv.rda")
+save(I.rf.short.nocv, file = "./R_models/I.rf.short.nocv.rda")
+
+save(I.rf.ramp.cv, file = "./R_models/I.rf.ramp.cv.rda")
+save(I.rf.ramp.nocv, file = "./R_models/I.rf.ramp.nocv.rda")
+
+```

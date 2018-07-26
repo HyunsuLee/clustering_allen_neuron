@@ -53,7 +53,7 @@ barplot(prop.table(table(Itest$transgenic_line)))
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 require(ggplot2)
 Btrain_df <- as.data.frame(table(Btrain$binary))
- # theme_set(theme_classic())
+theme_set(theme_classic())
 
 DrawPieChart <- function(data_class){
   df <- as.data.frame(table(data_class))
@@ -88,10 +88,25 @@ ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =3
 
 # subset data generation according to electrophysiological stimuli method
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
+require(dplyr)
+
+
 subsetgeneration <-function(dataset, type) {
-  if (type=="l") return(dataset[-c(5,6,8,9,13,14,16,17,20,21,23,24,26,27,29,30,32,33,35,36,38,39)])
-  if (type=="s") return(dataset[-c(4,5,7,8,12,13,15,16,22,23,25,26,28,29,31,32,34,35,37,38)])
-  if (type=="r") return(dataset[-c(4,6,7,9,12,14,15,17,20,21,22,24,25,27,28,30,31,33,34,36,37,39)])
+  commondataset <- dataset[c(10,18,19,40,41,42,43)]
+  if (type=="l") {
+    longdataset <- dataset[c(1,2,3,11,44)]
+    long_subset <- select(dataset, contains("long"))
+    longdataset <- cbind(commondataset, longdataset)
+    longdataset <- cbind(longdataset, long_subset)
+    return(longdataset)}
+  if (type=="s") {
+    short_subset <- select(dataset, contains("short"))
+    shortdataset <- cbind(commondataset, short_subset)
+    return(shortdataset)}
+  if (type=="r") {
+    ramp_subset <- select(dataset, contains("ramp"))
+    rampdataset <- cbind(commondataset, ramp_subset)
+    return(rampdataset)}
 }
 
 Btrain.l <- subsetgeneration(Btrain,"l")
@@ -122,37 +137,36 @@ Itest.r <- subsetgeneration(Itest,"r")
 
 # write divided data into csv file
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
-write.csv(cre_na_omitted, "cre_na_omitted.csv")
-write.csv(Btrain,"Btrain.csv")
-write.csv(Btrain.l,"Btrain_long.csv")
-write.csv(Btrain.s,"Btrain_short.csv")
-write.csv(Btrain.r,"Btrain_ramp.csv")
+write.csv(cre_na_omitted, "./divided_data/cre_na_omitted.csv", row.names = T)
+write.csv(Btrain,"./divided_data/Btrain.csv", row.names = T)
+write.csv(Btrain.l,"./divided_data/Btrain_long.csv", row.names = T)
+write.csv(Btrain.s,"./divided_data/Btrain_short.csv", row.names = T)
+write.csv(Btrain.r,"./divided_data/Btrain_ramp.csv", row.names = T)
 
-write.csv(Btest,"Btest.csv")
-write.csv(Btest.l,"Btest_long.csv")
-write.csv(Btest.s,"Btest_short.csv")
-write.csv(Btest.r,"Btest_ramp.csv")
+write.csv(Btest,"./divided_data/Btest.csv", row.names = T)
+write.csv(Btest.l,"./divided_data/Btest_long.csv", row.names = T)
+write.csv(Btest.s,"./divided_data/Btest_short.csv", row.names = T)
+write.csv(Btest.r,"./divided_data/Btest_ramp.csv", row.names = T)
 
-write.csv(Etrain,"Etrain.csv")
-write.csv(Etrain.l,"Etrain_long.csv")
-write.csv(Etrain.s,"Etrain_short.csv")
-write.csv(Etrain.r,"Etrain_ramp.csv")
+write.csv(Etrain,"./divided_data/Etrain.csv", row.names = T)
+write.csv(Etrain.l,"./divided_data/Etrain_long.csv", row.names = T)
+write.csv(Etrain.s,"./divided_data/Etrain_short.csv", row.names = T)
+write.csv(Etrain.r,"./divided_data/Etrain_ramp.csv", row.names = T)
 
-write.csv(Etest,"Etest.csv")
-write.csv(Etest.l,"Etest_long.csv")
-write.csv(Etest.s,"Etest_short.csv")
-write.csv(Etest.r,"Etest_ramp.csv")
+write.csv(Etest,"./divided_data/Etest.csv", row.names = T)
+write.csv(Etest.l,"./divided_data/Etest_long.csv", row.names = T)
+write.csv(Etest.s,"./divided_data/Etest_short.csv", row.names = T)
+write.csv(Etest.r,"./divided_data/Etest_ramp.csv", row.names = T)
 
-write.csv(Itrain,"Itrain.csv")
-write.csv(Itrain.l,"Itrain_long.csv")
-write.csv(Itrain.s,"Itrain_short.csv")
-write.csv(Itrain.r,"Itrain_ramp.csv")
+write.csv(Itrain,"./divided_data/Itrain.csv", row.names = T)
+write.csv(Itrain.l,"./divided_data/Itrain_long.csv", row.names = T)
+write.csv(Itrain.s,"./divided_data/Itrain_short.csv", row.names = T)
+write.csv(Itrain.r,"./divided_data/Itrain_ramp.csv", row.names = T)
 
-write.csv(Itest,"Itest.csv")
-write.csv(Itest.l,"Itest_long.csv")
-write.csv(Itest.s,"Itest_short.csv")
-write.csv(Itest.r,"Itest_ramp.csv")
+write.csv(Itest,"./divided_data/Itest.csv", row.names = T)
+write.csv(Itest.l,"./divided_data/Itest_long.csv", row.names = T)
+write.csv(Itest.s,"./divided_data/Itest_short.csv", row.names = T)
+write.csv(Itest.r,"./divided_data/Itest_ramp.csv", row.names = T)
 ```
 
 

@@ -35,6 +35,7 @@ preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # conversion to p
 
 conventional.pred = prediction(preds,cre_na_omitted$binary_neuron)
 conventional.perf = performance(conventional.pred,"tpr","fpr")
+conventional.auc  =performance(conventional.pred,'auc')
 ```
 
 # set Cross-validation as k-fold
@@ -67,6 +68,8 @@ B.reg.ramp.nocv <-caret::train(binary_neuron ~ ., data = Btrain.r, method = "glm
 # Prediction accuracy of LASSO model
 ```{r, message=FALSE, warning=FALSE}
 library(magrittr)
+
+set.seed(849)
 
 cat("\n\n\n--------- Binary prediction / Full model / LASSO with CV ----------\n")
 a<-predict(B.reg.full.cv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
@@ -144,6 +147,8 @@ legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","full_CV","full_no
 ```{r, message=FALSE, warning=FALSE}
 doMC::registerDoMC(cores = 4) # multi core calculation
 
+set.seed(849)
+
 B.rf.full.cv <- caret::train(binary_neuron ~ ., data = Btrain, method = "rf", trControl = fitControl)
 B.rf.full.nocv <-caret::train(binary_neuron ~ ., data = Btrain, method = "rf", trControl = noCV)
 
@@ -156,6 +161,61 @@ B.rf.short.nocv <-caret::train(binary_neuron ~ ., data = Btrain.s, method = "rf"
 B.rf.ramp.cv <- caret::train(binary_neuron ~ ., data = Btrain.r, method = "rf", trControl = fitControl)
 B.rf.ramp.nocv <-caret::train(binary_neuron ~ ., data = Btrain.r, method = "rf", trControl = noCV)
 ```
+
+# Prediction accuracy of RF models
+```{r, message=FALSE, warning=FALSE}
+library(magrittr)
+
+
+cat("\n\n\n--------- Binary prediction / Full model / RANDOM FOREST with CV ----------\n")
+a<-predict(B.rf.full.cv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Full model / RANDOM FOREST without CV ----------\n")
+a<-predict(B.rf.full.nocv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Long model / RANDOM FOREST with CV ----------\n")
+a<-predict(B.rf.long.cv, newdata = Btest.l) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Long model / RANDOM FOREST without CV ----------\n")
+a<-predict(B.rf.long.nocv, newdata = Btest.l) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Short model / RANDOM FOREST with CV ----------\n")
+a<-predict(B.rf.short.cv, newdata = Btest.s) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Short model / RANDOM FOREST without CV ----------\n")
+a<-predict(B.rf.short.nocv, newdata = Btest.s) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Ramp model / RANDOM FOREST with CV ----------\n")
+a<-predict(B.rf.ramp.cv, newdata = Btest.r) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+cat("\n\n\n--------- Binary prediction / Ramp model / RANDOM FOREST without CV ----------\n")
+a<-predict(B.rf.ramp.nocv, newdata = Btest.r) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+```
+
 
 # Plot ROC curve & AUC
 ```{r, message=FALSE, warning=FALSE}
@@ -181,5 +241,33 @@ abline(a=0,b=1,lwd=1,lty=2,col="gray")
 legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","full_CV","full_noCV","long_CV","long_noCV","short_CV","short_noCV","ramp_CV","ramp_noCV"),bty='n') 
 ```
 
+# Saving models
+```{r, message=FALSE, warning=FALSE}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
+save(B.reg.full.cv, file = "./R_models/B.reg.full.cv.rda")
+save(B.reg.full.nocv, file = "./R_models/B.reg.full.nocv.rda")
+
+save(B.reg.long.cv, file = "./R_models/B.reg.long.cv.rda")
+save(B.reg.long.nocv, file = "./R_models/B.reg.long.nocv.rda")
+
+save(B.reg.short.cv, file = "./R_models/B.reg.short.cv.rda")
+save(B.reg.short.nocv, file = "./R_models/B.reg.short.nocv.rda")
+
+save(B.reg.ramp.cv, file = "./R_models/B.reg.ramp.cv.rda")
+save(B.reg.ramp.nocv, file = "./R_models/B.reg.ramp.nocv.rda")
+
+save(B.rf.full.cv, file = "./R_models/B.rf.full.cv.rda")
+save(B.rf.full.nocv, file = "./R_models/B.rf.full.nocv.rda")
+
+save(B.rf.long.cv, file = "./R_models/B.rf.long.cv.rda")
+save(B.rf.long.nocv, file = "./R_models/B.rf.long.nocv.rda")
+
+save(B.rf.short.cv, file = "./R_models/B.rf.short.cv.rda")
+save(B.rf.short.nocv, file = "./R_models/B.rf.short.nocv.rda")
+
+save(B.rf.ramp.cv, file = "./R_models/B.rf.ramp.cv.rda")
+save(B.rf.ramp.nocv, file = "./R_models/B.rf.ramp.nocv.rda")
+
+```
 
 
