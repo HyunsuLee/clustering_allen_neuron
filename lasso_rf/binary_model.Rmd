@@ -52,6 +52,8 @@ noGrid <- expand.grid(alpha = 1, lambda = 0.01)
 ```{r, message=FALSE, warning=FALSE}
 doMC::registerDoMC(cores = 4) # multi core calculation
 
+set.seed(849)
+
 B.reg.full.cv <- caret::train(binary_neuron ~ ., data = Btrain, method = "glmnet", trControl = fitControl, tuneGrid = tuneGrid)
 B.reg.full.nocv <-caret::train(binary_neuron ~ ., data = Btrain, method = "glmnet", trControl = noCV, tuneGrid = noGrid)
 
@@ -68,8 +70,6 @@ B.reg.ramp.nocv <-caret::train(binary_neuron ~ ., data = Btrain.r, method = "glm
 # Prediction accuracy of LASSO model
 ```{r, message=FALSE, warning=FALSE}
 library(magrittr)
-
-set.seed(849)
 
 cat("\n\n\n--------- Binary prediction / Full model / LASSO with CV ----------\n")
 a<-predict(B.reg.full.cv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)

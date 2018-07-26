@@ -25,6 +25,9 @@ Iset$transgenic_line <- factor(Iset$transgenic_line)  # Transgenic(Inhibitory) r
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 # install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
 library(caret)
+
+set.seed(849)
+
 BindexTrain <- createDataPartition(Bset$binary_neuron, p = .8, list = F)
 Btrain <- Bset[ BindexTrain, ]
 Btest  <- Bset[-BindexTrain, ]
@@ -92,9 +95,9 @@ require(dplyr)
 
 
 subsetgeneration <-function(dataset, type) {
-  commondataset <- dataset[c(10,18,19,40,41,42,43)]
+  commondataset <- dataset[c(10,18,19,40,41,42,44)]
   if (type=="l") {
-    longdataset <- dataset[c(1,2,3,11,44)]
+    longdataset <- dataset[c(1,2,3,11,43)]
     long_subset <- select(dataset, contains("long"))
     longdataset <- cbind(commondataset, longdataset)
     longdataset <- cbind(longdataset, long_subset)

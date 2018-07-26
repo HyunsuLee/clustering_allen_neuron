@@ -1,0 +1,39 @@
+---
+title: "test"
+author: "incheol, hyunsu"
+date: "July 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Reload trained model test
+
+# load data
+
+```{r}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+
+Btrain		<- read.csv("Btrain.csv", row.names = "X")
+
+Btest		<- read.csv("Btest.csv", row.names = "X")
+```
+
+
+# reload model
+```{r}
+setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
+load("./R_models/B.reg.full.cv.rda")
+
+library(magrittr)
+
+cat("\n\n\n--------- Binary prediction / Full model / LASSO with CV ----------\n")
+a<-predict(B.reg.full.cv, newdata = Btest) %>% confusionMatrix(Btest$binary_neuron)
+a$table
+cat("\n")
+a$overall[c(1,3:4)]
+
+```
+
