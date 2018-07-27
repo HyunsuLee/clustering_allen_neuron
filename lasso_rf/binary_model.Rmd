@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+setwd("../Data_prep/divided_data")
 
 cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
 
@@ -243,7 +243,6 @@ legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","full_CV","full_no
 
 # Saving models
 ```{r, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
 save(B.reg.full.cv, file = "./R_models/B.reg.full.cv.rda")
 save(B.reg.full.nocv, file = "./R_models/B.reg.full.nocv.rda")
 

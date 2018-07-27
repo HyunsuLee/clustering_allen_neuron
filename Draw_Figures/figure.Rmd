@@ -1,0 +1,126 @@
+---
+title: "Drawing Figure for manuscript"
+author: "incheol, hyunsu"
+date: "July 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data load
+```{r, message=FALSE, warning=FALSE}
+setwd("../Data_prep/divided_data")
+
+cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
+
+Btrain		<- read.csv("Btrain.csv", row.names = "X")
+Btrain.l	<- read.csv("Btrain_long.csv", header = T, row.names = "X")
+Btrain.s	<- read.csv("Btrain_short.csv", header = T, row.names = "X")
+Btrain.r	<- read.csv("Btrain_ramp.csv", header = T, row.names = "X")
+
+Btest		<- read.csv("Btest.csv", row.names = "X")
+Btest.l		<- read.csv("Btest_long.csv", header = T, row.names = "X")
+Btest.s		<- read.csv("Btest_short.csv", header = T, row.names = "X")
+Btest.r		<- read.csv("Btest_ramp.csv", header = T, row.names = "X")
+
+Etrain		<- read.csv("Etrain.csv", row.names = "X")
+Etrain.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
+Etrain.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
+Etrain.r	<- read.csv("Etrain_ramp.csv", header = T, row.names = "X")
+
+Etest		<- read.csv("Etest.csv", row.names = "X")
+Etest.l		<- read.csv("Etest_long.csv", header = T, row.names = "X")
+Etest.s		<- read.csv("Etest_short.csv", header = T, row.names = "X")
+Etest.r		<- read.csv("Etest_ramp.csv", header = T, row.names = "X")
+
+Itrain		<- read.csv("Itrain.csv", row.names = "X")
+Itrain.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
+Itrain.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
+Itrain.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
+
+Itest		<- read.csv("Itest.csv", row.names = "X")
+Itest.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
+Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
+Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
+```
+
+# TODO Figure 2 drawing in final2_hyunsu.Rmd line 1521. 
+
+```{r}
+require(latex2exp)
+plot(1, main = TeX('$\\theta$'))
+```
+
+# Binary classification
+
+## Conventional decision according to firing rate
+```{r, message=FALSE, warning=FALSE}
+require(ROCR)
+x.conven <- cre_na_omitted$firing_rate
+preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability로 conversion
+# con.preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability로 conversion
+
+conventional.pred = prediction(preds,cre_na_omitted$binary_neuron)
+conventional.perf = performance(conventional.pred,"tpr","fpr")
+conventional.auc  =performance(conventional.pred,'auc')
+```
+
+## Load ANN results
+```{r}
+setwd("../ANN/results")
+B.ANN.full <-read.csv("00_4_binary_full_ANNmodel_prob.csv",header=F) 
+B.ANN.long <-read.csv("01_4_binary_long_ANNmodel_prob.csv",header=F)
+B.ANN.short<-read.csv("02_4_binary_short_ANNmodel_prob.csv",header=F)
+B.ANN.ramp <-read.csv("03_4_binary_ramp_ANNmodel_prob.csv",header=F)
+
+E.ANN.full <-read.csv("04_4_Eline_full_argmax.csv",header=F) 
+E.ANN.long <-read.csv("05_4_Eline_long_argmax.csv",header=F)
+E.ANN.short<-read.csv("06_4_Eline_short_argmax.csv",header=F)
+E.ANN.ramp <-read.csv("07_4_Eline_ramp_argmax.csv",header=F)
+
+I.ANN.full <-read.csv("08_4_Iline_full_argmax.csv",header=F) 
+I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
+I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
+I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
+```
+## Checking the performance of ANN model of binary classification
+```{r}
+# ROC curve & AUC
+library(ROCR)
+BrocANN <- function(model) {
+pred = prediction(model[,1],Btest$binary_neuron)
+au<-performance(pred,"auc")
+cat(substitute(model),": ",au@y.values[[1]],"\n")
+return(performance(pred,"tpr","fpr"))
+}
+
+# Plotting ROC Curves
+cat("conventional: ",conventional.auc@y.values[[1]],"\n")
+plot(conventional.perf,col=2,lwd=0.5,main="ROC Curves (ANN)")
+plot(BrocANN(B.ANN.full),col=3,lwd=0.5,add=T)
+plot(BrocANN(B.ANN.long),col=4,lwd=0.5,add=T)
+plot(BrocANN(B.ANN.short),col=5,lwd=0.5,add=T)
+plot(BrocANN(B.ANN.ramp),col=6,lwd=0.5,add=T)
+
+
+abline(a=0,b=1,lwd=1,lty=2,col="gray")
+legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","ANN_full","ANN_long","ANN_short","ANN_ramp"),bty='n') 
+```
+
+
+# Load LASSO and RF models
+```{r, message=FALSE, warning=FALSE}
+setwd("../lasso_rf/")
+
+model_files <- list.files("./R_models/")
+
+for (file_name in model_files){
+  load(paste0("./R_models/",file_name))
+} 
+```
+
+
+
+
