@@ -48,9 +48,117 @@ Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
 
 # TODO Figure 2 drawing in final2_hyunsu.Rmd line 1521. 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 require(latex2exp)
 plot(1, main = TeX('$\\theta$'))
+```
+
+```{r, message=FALSE, warning=FALSE}
+GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin, draw_group = function(self, data, ..., draw_quantiles = NULL){
+  data <- transform(data, xminv = x - violinwidth * (x - xmin), xmaxv = x + violinwidth * (xmax - x))
+  grp <- data[1,'group']
+  newdata <- plyr::arrange(transform(data, x = if(grp%%2==1) xminv else xmaxv), if(grp%%2==1) y else -y)
+  newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
+  newdata[c(1,nrow(newdata)-1,nrow(newdata)), 'x'] <- round(newdata[1, 'x']) 
+  if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
+    stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <= 
+                                              1))
+    quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
+    aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
+    aesthetics$alpha <- rep(1, nrow(quantiles))
+    both <- cbind(quantiles, aesthetics)
+    quantile_grob <- GeomPath$draw_panel(both, ...)
+    ggplot2:::ggname("geom_split_violin", grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
+  }
+  else {
+    ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
+  }
+})
+
+geom_split_violin <- function (mapping = NULL, data = NULL, stat = "ydensity", position = "identity", ..., draw_quantiles = NULL, trim = TRUE, scale = "area", na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+  layer(data = data, mapping = mapping, stat = stat, geom = GeomSplitViolin, position = position, show.legend = show.legend, inherit.aes = inherit.aes, params = list(trim = trim, scale = scale, draw_quantiles = draw_quantiles, na.rm = na.rm, ...))
+}
+```
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+require(reshape)
+require(latex2exp)
+
+fig2data <- cre_na_omitted[ , !names(cre_na_omitted) %in% 
+                                      c("transgenic_line")]
+fig2meltdata <- melt(fig2data, id = c("binary_neuron"))
+
+t_ramp_filter <- fig2meltdata[grep("_t_ramp", fig2meltdata$variable), ]
+
+ggplot(data = t_ramp_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+t_long_filter <- rbind(fig2meltdata[grep("_t_long", fig2meltdata$variable), ],
+                       fig2meltdata[grep("^trough_t_short", fig2meltdata$variable), ], 
+                       fig2meltdata[grep("^slow_trough_t_short", fig2meltdata$variable), ])
+
+ggplot(data = t_long_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+t_short_filter <- rbind(fig2meltdata[grep("[^h]_t_short", fig2meltdata$variable), ], 
+                        fig2meltdata[grep("fast_trough_t_short", fig2meltdata$variable), ])
+
+ggplot(data = t_short_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+avg_isi <- fig2meltdata[grep("avg_isi", fig2meltdata$variable), ]
+ggplot(data = avg_isi, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+latency <- fig2meltdata[grep("latency", fig2meltdata$variable), ]
+ggplot(data = latency, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+peak_v_filter <- rbind(fig2meltdata[grep("k_v_", fig2meltdata$variable), ],
+                       fig2meltdata[grep("hei", fig2meltdata$variable), ])
+
+ggplot(data = peak_v_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+v_filter <-rbind(fig2meltdata[grep("[^k]_v_", fig2meltdata$variable), ],
+fig2meltdata[grep("vrest", fig2meltdata$variable), ],
+fig2meltdata[grep("r_sag", fig2meltdata$variable), ])
+
+ggplot(data = v_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+
+i_filter <- fig2meltdata[grep("d_i_", fig2meltdata$variable), ]
+
+ggplot(data = i_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + scale_y_log10()
+
+resist <- rbind(fig2meltdata[grep("^input", fig2meltdata$variable), ],
+                fig2meltdata[grep("^ri", fig2meltdata$variable), ])
+ggplot(data = resist, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+adaptation <- fig2meltdata[grep("^ada", fig2meltdata$variable), ]
+ggplot(data = adaptation, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+sag <- fig2meltdata[grep("^sag", fig2meltdata$variable), ]
+ggplot(data = sag, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+up_d_ratio <- fig2meltdata[grep("^up", fig2meltdata$variable), ]
+ggplot(data = up_d_ratio, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+f_i_curve <- fig2meltdata[grep("^f_", fig2meltdata$variable), ]
+ggplot(data = f_i_curve, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+
+firing_rate <- fig2meltdata[grep("^fir", fig2meltdata$variable), ]
+ggplot(data = firing_rate, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal()
+# TODO figure grid arrange. 
+
 ```
 
 # Binary classification
