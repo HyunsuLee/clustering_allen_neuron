@@ -46,14 +46,12 @@ Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
 Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
 ```
 
-# TODO Figure 2 drawing in final2_hyunsu.Rmd line 1521. 
+
+# make function for split vion plot
+* https://stackoverflow.com/questions/35717353/split-violin-plot-with-ggplot2
 
 ```{r, message=FALSE, warning=FALSE}
-require(latex2exp)
-plot(1, main = TeX('$\\theta$'))
-```
-
-```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
 GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin, draw_group = function(self, data, ..., draw_quantiles = NULL){
   data <- transform(data, xminv = x - violinwidth * (x - xmin), xmaxv = x + violinwidth * (xmax - x))
   grp <- data[1,'group']
@@ -79,86 +77,143 @@ geom_split_violin <- function (mapping = NULL, data = NULL, stat = "ydensity", p
   layer(data = data, mapping = mapping, stat = stat, geom = GeomSplitViolin, position = position, show.legend = show.legend, inherit.aes = inherit.aes, params = list(trim = trim, scale = scale, draw_quantiles = draw_quantiles, na.rm = na.rm, ...))
 }
 ```
+
+# Draw figure2 split violin plots
+
 ```{r, message=FALSE, warning=FALSE}
 require(ggplot2)
 require(reshape)
 require(latex2exp)
+require(gridExtra)
 
-fig2data <- cre_na_omitted[ , !names(cre_na_omitted) %in% 
-                                      c("transgenic_line")]
+
+fig2data <- cre_na_omitted[ , !names(cre_na_omitted) %in% c("transgenic_line")]
 fig2meltdata <- melt(fig2data, id = c("binary_neuron"))
 
-t_ramp_filter <- fig2meltdata[grep("_t_ramp", fig2meltdata$variable), ]
+levels(fig2meltdata$variable) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", "$\\FR/I$", "$\\t^{long}_{FT}$", "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$", "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$", "$\\V^{short}_{FT}$", "$\\IR$", "$\\t^{long}_{lat}$", "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$", "$\\t^{short}_{P}$", "$\\V^{long}_{P}$", "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", "$\\R_{m}$", "$\\Sag$", "$\\t^{short}_{ST}$", "$\\V^{short}_{ST}$", "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$", "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$", "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$", "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$", "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$", "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$", "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$", "$\\V^{short}_{T}$",  "$\\rho^{long}$", "$\\rho^{ramp}$", "$\\rho^{short}$", "$\\V_{Sag}$", "$\\V_{rest}$", "$\\H$", "$\\FR")
 
-ggplot(data = t_ramp_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+# 1st row of figure2(mV)
+v_filter <-fig2meltdata[grep("V", fig2meltdata$variable), ]
+v_filter_wo_p <- v_filter[grep("[^P]\\}\\$$", v_filter$variable), ]
 
-t_long_filter <- rbind(fig2meltdata[grep("_t_long", fig2meltdata$variable), ],
-                       fig2meltdata[grep("^trough_t_short", fig2meltdata$variable), ], 
-                       fig2meltdata[grep("^slow_trough_t_short", fig2meltdata$variable), ])
+fig2_1 <- ggplot(data = v_filter_wo_p, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "right") + labs(x = "", y = "mV") +
+   scale_x_discrete(labels = parse(text = TeX(unique(v_filter_wo_p$variable)))) + 
+  scale_fill_discrete(name = "", labels = c("E", "I")) +theme(axis.title.y = element_text(size = rel(0.7))) + theme(legend.text = element_text(size = rel(0.5)))
 
-ggplot(data = t_long_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
-
-t_short_filter <- rbind(fig2meltdata[grep("[^h]_t_short", fig2meltdata$variable), ], 
-                        fig2meltdata[grep("fast_trough_t_short", fig2meltdata$variable), ])
-
-ggplot(data = t_short_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
-
-avg_isi <- fig2meltdata[grep("avg_isi", fig2meltdata$variable), ]
-ggplot(data = avg_isi, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
-
-latency <- fig2meltdata[grep("latency", fig2meltdata$variable), ]
-ggplot(data = latency, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
-
-peak_v_filter <- rbind(fig2meltdata[grep("k_v_", fig2meltdata$variable), ],
-                       fig2meltdata[grep("hei", fig2meltdata$variable), ])
-
-ggplot(data = peak_v_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
-
-v_filter <-rbind(fig2meltdata[grep("[^k]_v_", fig2meltdata$variable), ],
-fig2meltdata[grep("vrest", fig2meltdata$variable), ],
-fig2meltdata[grep("r_sag", fig2meltdata$variable), ])
-
-ggplot(data = v_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+# https://chemicalstatistician.wordpress.com/2018/03/10/use-unique-instead-of-levels-to-find-the-possible-values-of-a-character-variable-in-r/
 
 
-i_filter <- fig2meltdata[grep("d_i_", fig2meltdata$variable), ]
+# 2nd row of figure2(mV, ratio, resistance)
+over_zero_v_filter <- rbind(v_filter[grep("P", v_filter$variable), ],
+                       fig2meltdata[grep("H", fig2meltdata$variable), ])
+fig2_21 <- ggplot(data = over_zero_v_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "mV") +
+   scale_x_discrete(labels = parse(text = TeX(unique(over_zero_v_filter$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
 
-ggplot(data = i_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal() + scale_y_log10()
+up_d_ratio <- fig2meltdata[grep("rho", fig2meltdata$variable), ]
+fig2_22 <- ggplot(data = up_d_ratio, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "") +
+  scale_x_discrete(labels = parse(text = TeX(unique(up_d_ratio$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
 
-resist <- rbind(fig2meltdata[grep("^input", fig2meltdata$variable), ],
-                fig2meltdata[grep("^ri", fig2meltdata$variable), ])
-ggplot(data = resist, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+adaptation <- fig2meltdata[grep("inde", fig2meltdata$variable), ]
+fig2_23 <- ggplot(data = adaptation, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "") + 
+  scale_x_discrete(labels = parse(text =TeX(unique(adaptation$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
 
-adaptation <- fig2meltdata[grep("^ada", fig2meltdata$variable), ]
-ggplot(data = adaptation, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+sag <- fig2meltdata[grep("Sag\\$", fig2meltdata$variable), ]
+fig2_24 <- ggplot(data = sag, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "") +
+  scale_x_discrete(labels = parse(text =TeX(unique(sag$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
 
-sag <- fig2meltdata[grep("^sag", fig2meltdata$variable), ]
-ggplot(data = sag, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+resist <- fig2meltdata[grep("[^F]R", fig2meltdata$variable), ]
+fig2_25 <- ggplot(data = resist, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = TeX('$\\m\\Omega$')) +
+  scale_x_discrete(labels = parse(text =TeX(unique(resist$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
 
-up_d_ratio <- fig2meltdata[grep("^up", fig2meltdata$variable), ]
-ggplot(data = up_d_ratio, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+fig2_2 <- grid.arrange(fig2_21, fig2_22, fig2_23, fig2_24, fig2_25, widths = c(4,3,1.5,1.5,2), nrow = 1)
 
-f_i_curve <- fig2meltdata[grep("^f_", fig2meltdata$variable), ]
-ggplot(data = f_i_curve, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+# 3rd row of figure2(ms, firing)
+t_long_filter <- rbind(fig2meltdata[grep("t\\^\\{long\\}_\\{[^l]", fig2meltdata$variable), ],
+                  fig2meltdata[grep("t\\^\\{short\\}_\\{T", fig2meltdata$variable), ],
+                  fig2meltdata[grep("t\\^\\{short\\}_\\{S", fig2meltdata$variable), ])
+fig2_31 <- ggplot(data = t_long_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() +theme(legend.position = "none") + labs(x= "", y = "mS") +
+  scale_x_discrete(labels = parse(text =TeX(unique(t_long_filter$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
 
-firing_rate <- fig2meltdata[grep("^fir", fig2meltdata$variable), ]
-ggplot(data = firing_rate, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal()
+latency <- fig2meltdata[grep("lat", fig2meltdata$variable), ]
+fig2_32 <- ggplot(data = latency, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "S") +
+  scale_x_discrete(labels = parse(text =TeX(unique(latency$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+avg_isi <- fig2meltdata[grep("avg", fig2meltdata$variable), ]
+fig2_33 <- ggplot(data = avg_isi, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "mS") +
+  scale_x_discrete(labels = parse(text =TeX(unique(avg_isi$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+firing_rate <- fig2meltdata[grep("FR$", fig2meltdata$variable), ]
+fig2_34 <- ggplot(data = firing_rate, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "spikes/s") +
+  scale_x_discrete(labels = parse(text =TeX(unique(firing_rate$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+f_i_curve <- fig2meltdata[grep("FR/", fig2meltdata$variable), ]
+fig2_35 <- ggplot(data = f_i_curve, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "spikes/s/pA") +
+  scale_x_discrete(labels = parse(text =TeX(unique(f_i_curve$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+fig2_3 <- grid.arrange(fig2_31, fig2_32, fig2_33, fig2_34, fig2_35, widths = c(6,1.5, 1.5, 1.5, 1.5), nrow=1)
+
+
+# 4th row of figure2(ms, pA)
+t_filter <- fig2meltdata[grep("t\\^\\{short", fig2meltdata$variable), ]
+
+t_short_filter <- rbind(t_filter[grep("FT\\}\\$$", t_filter$variable), ], 
+                        t_filter[grep("[^T]\\}\\$$", t_filter$variable), ])
+fig2_41 <- ggplot(data = t_short_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x= "", y = "mS") +
+  scale_x_discrete(labels = parse(text =TeX(unique(t_short_filter$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+t_ramp_filter <- fig2meltdata[grep("t\\^\\{ramp", fig2meltdata$variable), ]
+fig2_42 <- ggplot(data = t_ramp_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "ms") +
+  scale_x_discrete(labels = parse(text =TeX(unique(t_ramp_filter$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
+
+i_filter <- fig2meltdata[grep("I\\^", fig2meltdata$variable), ]
+fig2_43 <- ggplot(data = i_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + scale_y_log10() + theme(legend.position = "none") + labs(x = "", y = "pA") +
+  scale_x_discrete(labels = parse(text =TeX(unique(i_filter$variable)))) +theme(axis.title.y = element_text(size = rel(0.7))) 
+
+fig2_4 <- grid.arrange(fig2_41, fig2_42, fig2_43, widths = c(3,4,3), nrow = 1)
+
+# arrange violin plots
+fig2_l <- grid.arrange(fig2_1, fig2_2, fig2_3, fig2_4, ncol = 1)
+
+
+# for heatmap, correlation matrix
+
+fig2data_numeric <- cre_na_omitted[ , !names(cre_na_omitted) %in% c("transgenic_line", "binary_neuron")]
+
+colnames(fig2data_numeric) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", "$\\FR/I$", "$\\t^{long}_{FT}$", "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$", "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$", "$\\V^{short}_{FT}$", "$\\IR$", "$\\t^{long}_{lat}$", "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$", "$\\t^{short}_{P}$", "$\\V^{long}_{P}$", "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", "$\\R_{m}$", "$\\Sag$", "$\\t^{short}_{ST}$", "$\\V^{short}_{ST}$", "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$", "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$", "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$", "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$", "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$", "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$", "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$", "$\\V^{short}_{T}$",  "$\\rho^{long}$", "$\\rho^{ramp}$", "$\\rho^{short}$", "$\\V_{Sag}$", "$\\V_{rest}$", "$\\H$", "$\\FR")
+
+
+
+cormat <- cor(fig2data_numeric)
+reorder_cormat <- function(cormat){
+# Use correlation between variables as distance
+dd <- as.dist((1-cormat)/2)
+hc <- hclust(dd)
+cormat <-cormat[hc$order, hc$order]
+}
+cormat <- reorder_cormat(cormat)
+melted_fig2b<-melt(cormat)
+melted_fig2b$X1 <- factor(melted_fig2b$X1, levels=unique(as.character(melted_fig2b$X1)))
+melted_fig2b$X2 <- factor(melted_fig2b$X2, levels=unique(as.character(melted_fig2b$X2)))
+fig2_r <- ggplot(data=melted_fig2b, aes(X1, X2, fill=value))+geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", name="r") +labs(x = "", y = "")+theme(legend.position = "none") + scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$X1)))) + theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +theme(axis.title.y = element_text(size = rel(0.7)))
 # TODO figure grid arrange. 
+fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 
+ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
 ```
 
 # Binary classification
