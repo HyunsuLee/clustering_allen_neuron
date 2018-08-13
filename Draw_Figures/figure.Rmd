@@ -208,12 +208,68 @@ cormat <- reorder_cormat(cormat)
 melted_fig2b<-melt(cormat)
 melted_fig2b$X1 <- factor(melted_fig2b$X1, levels=unique(as.character(melted_fig2b$X1)))
 melted_fig2b$X2 <- factor(melted_fig2b$X2, levels=unique(as.character(melted_fig2b$X2)))
-fig2_r <- ggplot(data=melted_fig2b, aes(X1, X2, fill=value))+geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", name="r") +labs(x = "", y = "")+theme(legend.position = "none") + scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$X1)))) + theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +theme(axis.title.y = element_text(size = rel(0.7)))
+fig2_r <- ggplot(data=melted_fig2b, aes(X1, X2, fill=value)) + 
+      geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
+                    midpoint = 0, limit = c(-1,1), space = "Lab", name="r") +
+      labs(x = "", y = "")+
+      theme(legend.position = "bottom") + 
+      scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$X1)))) + 
+      theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +
+      theme(axis.title.y = element_text(size = rel(0.7)))
 # TODO figure grid arrange. 
 fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 
 ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
+ggsave("fig2_violin.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
+ggsave("fig2_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
+```
+
+
+# TODO redraw pie chart(figure3) to cumulative bar chart.
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+require(gridExtra)
+
+Btrain_freq <- as.data.frame(prop.table(table(Btrain$binary)))
+Btest_freq <- as.data.frame(prop.table(table(Btest$binary)))
+Btrain_freq <- cbind(Btrain_freq, 'train')
+Btest_freq <- cbind(Btest_freq, 'test')
+colnames(Btrain_freq) <- c("neuron", "probability", "set")
+colnames(Btest_freq) <- c("neuron", "probability", "set")
+Bpro <- rbind(Btrain_freq, Btest_freq)
+
+fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Paired") +
+  labs(x = "")
+
+
+Etrain_freq <- as.data.frame(prop.table(table(Etrain$transgenic_line)))
+Etest_freq <- as.data.frame(prop.table(table(Etest$transgenic_line)))
+Etrain_freq <- cbind(Etrain_freq, 'train')
+Etest_freq <- cbind(Etest_freq, 'test')
+colnames(Etrain_freq) <- c("neuron", "probability", "set")
+colnames(Etest_freq) <- c("neuron", "probability", "set")
+Epro <- rbind(Etrain_freq, Etest_freq)
+
+fig3_2 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
+  labs(x = "", fill  = "excitatory line")
+
+Itrain_freq <- as.data.frame(prop.table(table(Itrain$transgenic_line)))
+Itest_freq <- as.data.frame(prop.table(table(Itest$transgenic_line)))
+Itrain_freq <- cbind(Itrain_freq, 'train')
+Itest_freq <- cbind(Itest_freq, 'test')
+colnames(Itrain_freq) <- c("neuron", "probability", "set")
+colnames(Itest_freq) <- c("neuron", "probability", "set")
+Ipro <- rbind(Itrain_freq, Itest_freq)
+
+fig3_3 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
+  labs(x = "", fill = "inhibitory line")
+
+fig3 <- grid.arrange(fig3_1, fig3_2, fig3_3, ncol = 1)
+
+ggsave("fig3.tiff", fig3, width = 7, height = 10, units = "in", dpi = 300)
 ```
 
 # Binary classification
