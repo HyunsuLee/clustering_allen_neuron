@@ -216,7 +216,7 @@ fig2_r <- ggplot(data=melted_fig2b, aes(X1, X2, fill=value)) +
       scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$X1)))) + 
       theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +
       theme(axis.title.y = element_text(size = rel(0.7)))
-# TODO figure grid arrange. 
+
 fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 
 ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
@@ -225,7 +225,7 @@ ggsave("fig2_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 3
 ```
 
 
-# TODO redraw pie chart(figure3) to cumulative bar chart.
+# redraw pie chart(figure3) to cumulative bar chart.
 ```{r, message=FALSE, warning=FALSE}
 require(ggplot2)
 require(gridExtra)
@@ -238,9 +238,12 @@ colnames(Btrain_freq) <- c("neuron", "probability", "set")
 colnames(Btest_freq) <- c("neuron", "probability", "set")
 Bpro <- rbind(Btrain_freq, Btest_freq)
 
-fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + # for cumulative bar graph
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Paired") +
-  labs(x = "")
+  labs(x = "", y = "", fill = "") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Bpro$set))) + # xy axis swap and reverse order of set
+  theme(legend.position = "top", axis.text.x = element_blank())
 
 
 Etrain_freq <- as.data.frame(prop.table(table(Etrain$transgenic_line)))
@@ -251,9 +254,12 @@ colnames(Etrain_freq) <- c("neuron", "probability", "set")
 colnames(Etest_freq) <- c("neuron", "probability", "set")
 Epro <- rbind(Etrain_freq, Etest_freq)
 
-fig3_2 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+fig3_2 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
-  labs(x = "", fill  = "excitatory line")
+  labs(x = "", y = "", fill  = "excitatory line") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Epro$set))) + 
+  theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks.y = element_blank())
 
 Itrain_freq <- as.data.frame(prop.table(table(Itrain$transgenic_line)))
 Itest_freq <- as.data.frame(prop.table(table(Itest$transgenic_line)))
@@ -263,13 +269,16 @@ colnames(Itrain_freq) <- c("neuron", "probability", "set")
 colnames(Itest_freq) <- c("neuron", "probability", "set")
 Ipro <- rbind(Itrain_freq, Itest_freq)
 
-fig3_3 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + geom_bar(stat="identity") + 
+fig3_3 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
-  labs(x = "", fill = "inhibitory line")
+  labs(x = "", fill = "inhibitory line") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro$set))) + 
+  theme(legend.position = "top", axis.ticks.y = element_blank())
 
 fig3 <- grid.arrange(fig3_1, fig3_2, fig3_3, ncol = 1)
 
-ggsave("fig3.tiff", fig3, width = 7, height = 10, units = "in", dpi = 300)
+ggsave("fig3.tiff", fig3, width = 10, height = 5, units = "in", dpi = 300)
 ```
 
 # Binary classification
@@ -278,16 +287,24 @@ ggsave("fig3.tiff", fig3, width = 7, height = 10, units = "in", dpi = 300)
 ```{r, message=FALSE, warning=FALSE}
 require(ROCR)
 x.conven <- cre_na_omitted$firing_rate
-preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability로 conversion
-# con.preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability로 conversion
+preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability conversion
+# con.preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability conversion
 
-conventional.pred = prediction(preds,cre_na_omitted$binary_neuron)
+x.updownratio <- cre_na_omitted$upstroke_downstroke_ratio_short_square
+preds_ud = (x.updownratio-min(x.updownratio))/(max(x.updownratio)-min(x.updownratio))
+
+
+conventional.pred = prediction(preds, cre_na_omitted$binary_neuron, label.ordering = c("Excitatory", "Inhibitory"))
 conventional.perf = performance(conventional.pred,"tpr","fpr")
 conventional.auc  =performance(conventional.pred,'auc')
+
+udratio_pred = prediction(preds_ud, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
+udratio_perf = performance(udratio_pred, "tpr", "fpr")
+udratio_auc = performance(udratio_pred, "auc")
 ```
 
 ## Load ANN results
-```{r}
+```{r, message=FALSE, warning=FALSE}
 setwd("../ANN/results")
 B.ANN.full <-read.csv("00_4_binary_full_ANNmodel_prob.csv",header=F) 
 B.ANN.long <-read.csv("01_4_binary_long_ANNmodel_prob.csv",header=F)
@@ -305,7 +322,7 @@ I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
 I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
 ```
 ## Checking the performance of ANN model of binary classification
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # ROC curve & AUC
 library(ROCR)
 BrocANN <- function(model) {
@@ -322,10 +339,11 @@ plot(BrocANN(B.ANN.full),col=3,lwd=0.5,add=T)
 plot(BrocANN(B.ANN.long),col=4,lwd=0.5,add=T)
 plot(BrocANN(B.ANN.short),col=5,lwd=0.5,add=T)
 plot(BrocANN(B.ANN.ramp),col=6,lwd=0.5,add=T)
+plot(udratio_perf, col=7, lwd=0.5, add=T)
 
 
 abline(a=0,b=1,lwd=1,lty=2,col="gray")
-legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","ANN_full","ANN_long","ANN_short","ANN_ramp"),bty='n') 
+legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","ANN_full","ANN_long","ANN_short","ANN_ramp","ud_ratio"),bty='n') 
 ```
 
 
@@ -338,6 +356,15 @@ model_files <- list.files("./R_models/")
 for (file_name in model_files){
   load(paste0("./R_models/",file_name))
 } 
+
+
+```
+
+
+# Draw Figure 4 classification E vs I, ROC curves and accuracy bar plot
+```{r, message=FALSE, warning=FALSE}
+
+
 ```
 
 
