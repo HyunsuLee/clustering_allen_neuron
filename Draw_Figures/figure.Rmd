@@ -82,7 +82,7 @@ geom_split_violin <- function (mapping = NULL, data = NULL, stat = "ydensity", p
 
 ```{r, message=FALSE, warning=FALSE}
 require(ggplot2)
-require(reshape)
+require(reshape2)
 require(latex2exp)
 require(gridExtra)
 
@@ -206,14 +206,14 @@ cormat <-cormat[hc$order, hc$order]
 }
 cormat <- reorder_cormat(cormat)
 melted_fig2b<-melt(cormat)
-melted_fig2b$X1 <- factor(melted_fig2b$X1, levels=unique(as.character(melted_fig2b$X1)))
-melted_fig2b$X2 <- factor(melted_fig2b$X2, levels=unique(as.character(melted_fig2b$X2)))
-fig2_r <- ggplot(data=melted_fig2b, aes(X1, X2, fill=value)) + 
+melted_fig2b$Var1 <- factor(melted_fig2b$Var1, levels=unique(as.character(melted_fig2b$Var1)))
+melted_fig2b$Var2 <- factor(melted_fig2b$Var2, levels=unique(as.character(melted_fig2b$Var2)))
+fig2_r <- ggplot(data=melted_fig2b, aes(Var1, Var2, fill=value)) + 
       geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
                     midpoint = 0, limit = c(-1,1), space = "Lab", name="r") +
       labs(x = "", y = "")+
       theme(legend.position = "bottom") + 
-      scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$X1)))) + 
+      scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$Var1)))) + 
       theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +
       theme(axis.title.y = element_text(size = rel(0.7)))
 
@@ -296,7 +296,7 @@ preds_ud = (x.updownratio-min(x.updownratio))/(max(x.updownratio)-min(x.updownra
 
 conventional.pred = prediction(preds, cre_na_omitted$binary_neuron, label.ordering = c("Excitatory", "Inhibitory"))
 conventional.perf = performance(conventional.pred,"tpr","fpr")
-conventional.auc  =performance(conventional.pred,'auc')
+conventional.auc  =performance(conventional.pred,"auc")
 
 udratio_pred = prediction(preds_ud, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
 udratio_perf = performance(udratio_pred, "tpr", "fpr")
@@ -321,19 +321,21 @@ I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
 I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
 I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
 ```
+
 ## Checking the performance of ANN model of binary classification
 ```{r, message=FALSE, warning=FALSE}
 # ROC curve & AUC
 library(ROCR)
 BrocANN <- function(model) {
-pred = prediction(model[,1],Btest$binary_neuron)
-au<-performance(pred,"auc")
-cat(substitute(model),": ",au@y.values[[1]],"\n")
-return(performance(pred,"tpr","fpr"))
+    pred = prediction(model[,1],Btest$binary_neuron)
+    au<-performance(pred,"auc")
+    cat(substitute(model),": ",au@y.values[[1]],"\n")
+    return(performance(pred,"tpr","fpr"))
 }
 
 # Plotting ROC Curves
 cat("conventional: ",conventional.auc@y.values[[1]],"\n")
+cat("up_down_ratio: ",udratio_auc@y.values[[1]],"\n")
 plot(conventional.perf,col=2,lwd=0.5,main="ROC Curves (ANN)")
 plot(BrocANN(B.ANN.full),col=3,lwd=0.5,add=T)
 plot(BrocANN(B.ANN.long),col=4,lwd=0.5,add=T)
@@ -362,7 +364,69 @@ for (file_name in model_files){
 
 
 # Draw Figure 4 classification E vs I, ROC curves and accuracy bar plot
+https://stackoverflow.com/questions/24303203/creating-roc-curve-with-ggplot
 ```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+library(ROCR)
+library(magrittr)
+library(caret)
+
+
+# TODO create data.frame for drawing ROC curve for each input feature, models(full, long, short, ramp//LASSO, RF, ANN)
+
+BrocANN <- function(model) {
+    pred <- prediction(model[,1],Btest$binary_neuron)
+    fpr<- performance(pred,"tpr","fpr")@x.values[[1]]
+    tpr<- performance(pred,"tpr","fpr")@y.values[[1]]
+    result <- cbind(fpr, tpr)
+    results <- cbind.data.frame(result, paste(substitute(model)))
+    colnames(results) <- c("fpr", "tpr", "model")
+    return(results)
+}
+
+prediction(B.ANN.full[,1], Btest$binary_neuron)
+
+ANN_full_ROC <- BrocANN(B.ANN.full)
+
+Broc <- function(model, dataset) {
+     pred_ <- predict(model, type="prob", newdata=dataset)[,2]
+     pred <- prediction(pred_, Btest$binary_neuron)
+     fpr<- performance(pred,"tpr","fpr")@x.values[[1]]
+     tpr<- performance(pred,"tpr","fpr")@y.values[[1]]
+     result <- cbind(fpr, tpr)
+     result <- cbind.data.frame(result, paste(substitute(model)))
+     colnames(result) <- c("fpr", "tpr", "model")
+     return(result)
+}
+
+reg_full_ROC <- Broc(B.reg.full.nocv, Btest)
+rf_full_ROC <- Broc(B.rf.full.nocv, Btest)
+
+
+full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC)
+
+ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line()
+
+ANN_long_ROC <- BrocANN(B.ANN.long)
+reg_long_ROC <- Broc(B.reg.long.nocv, Btest)
+rf_long_ROC <- Broc(B.rf.long.nocv, Btest)
+long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC)
+
+ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line()
+
+ANN_short_ROC <- BrocANN(B.ANN.short)
+reg_short_ROC <- Broc(B.reg.short.nocv, Btest)
+rf_short_ROC <- Broc(B.rf.short.nocv, Btest)
+short_ROC <- rbind(ANN_short_ROC, reg_short_ROC, rf_short_ROC)
+
+ggplot(data = short_ROC, aes(fpr, tpr, color = model)) + geom_line()
+
+ANN_ramp_ROC <- BrocANN(B.ANN.ramp)
+reg_ramp_ROC <- Broc(B.reg.ramp.nocv, Btest)
+rf_ramp_ROC <- Broc(B.rf.ramp.nocv, Btest)
+ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC)
+
+ggplot(data = ramp_ROC, aes(fpr, tpr, color = model)) + geom_line()
 
 
 ```

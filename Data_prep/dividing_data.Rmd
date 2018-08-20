@@ -23,7 +23,7 @@ Iset$transgenic_line <- factor(Iset$transgenic_line)  # Transgenic(Inhibitory) r
 
 # train/test data split(stratified)
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-# install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
+install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
 library(caret)
 
 set.seed(849)
