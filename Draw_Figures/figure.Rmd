@@ -283,26 +283,6 @@ ggsave("fig3.tiff", fig3, width = 10, height = 5, units = "in", dpi = 300)
 
 # Binary classification
 
-## Conventional decision according to firing rate
-```{r, message=FALSE, warning=FALSE}
-require(ROCR)
-x.conven <- cre_na_omitted$firing_rate
-preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability conversion
-# con.preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven)) # probability conversion
-
-x.updownratio <- cre_na_omitted$upstroke_downstroke_ratio_short_square
-preds_ud = (x.updownratio-min(x.updownratio))/(max(x.updownratio)-min(x.updownratio))
-
-
-conventional.pred = prediction(preds, cre_na_omitted$binary_neuron, label.ordering = c("Excitatory", "Inhibitory"))
-conventional.perf = performance(conventional.pred,"tpr","fpr")
-conventional.auc  =performance(conventional.pred,"auc")
-
-udratio_pred = prediction(preds_ud, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
-udratio_perf = performance(udratio_pred, "tpr", "fpr")
-udratio_auc = performance(udratio_pred, "auc")
-```
-
 ## Load ANN results
 ```{r, message=FALSE, warning=FALSE}
 setwd("../ANN/results")
@@ -321,33 +301,6 @@ I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
 I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
 I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
 ```
-
-## Checking the performance of ANN model of binary classification
-```{r, message=FALSE, warning=FALSE}
-# ROC curve & AUC
-library(ROCR)
-BrocANN <- function(model) {
-    pred = prediction(model[,1],Btest$binary_neuron)
-    au<-performance(pred,"auc")
-    cat(substitute(model),": ",au@y.values[[1]],"\n")
-    return(performance(pred,"tpr","fpr"))
-}
-
-# Plotting ROC Curves
-cat("conventional: ",conventional.auc@y.values[[1]],"\n")
-cat("up_down_ratio: ",udratio_auc@y.values[[1]],"\n")
-plot(conventional.perf,col=2,lwd=0.5,main="ROC Curves (ANN)")
-plot(BrocANN(B.ANN.full),col=3,lwd=0.5,add=T)
-plot(BrocANN(B.ANN.long),col=4,lwd=0.5,add=T)
-plot(BrocANN(B.ANN.short),col=5,lwd=0.5,add=T)
-plot(BrocANN(B.ANN.ramp),col=6,lwd=0.5,add=T)
-plot(udratio_perf, col=7, lwd=0.5, add=T)
-
-
-abline(a=0,b=1,lwd=1,lty=2,col="gray")
-legend("bottomright",col=c(2:10),lwd=2,legend=c("firing_rate","ANN_full","ANN_long","ANN_short","ANN_ramp","ud_ratio"),bty='n') 
-```
-
 
 # Load LASSO and RF models
 ```{r, message=FALSE, warning=FALSE}
@@ -370,64 +323,223 @@ require(ggplot2)
 library(ROCR)
 library(magrittr)
 library(caret)
+require(gridExtra)
 
 
-# TODO create data.frame for drawing ROC curve for each input feature, models(full, long, short, ramp//LASSO, RF, ANN)
+# Making conventional ROC curve by detemining by firing_rate.
+require(ROCR)
+x.conven <- cre_na_omitted$firing_rate
+preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven))
+
+conventional.pred = prediction(preds, cre_na_omitted$binary_neuron, label.ordering = c("Excitatory", "Inhibitory"))
+FR_ROC <- cbind(performance(conventional.pred,"tpr","fpr")@x.values[[1]], performance(conventional.pred,"tpr","fpr")@y.values[[1]])
+FR_ROC <- cbind.data.frame(FR_ROC, c("FR"))
+colnames(FR_ROC) <- c("fpr", "tpr", "model")
+FR_auc  = round(performance(conventional.pred,"auc")@y.values[[1]], digits = 4)
+
+
+# x.updownratio <- cre_na_omitted$upstroke_downstroke_ratio_short_square
+# preds_ud = (x.updownratio-min(x.updownratio))/(max(x.updownratio)-min(x.updownratio))
+
+# udratio_pred = prediction(preds_ud, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
+# udratio_perf = performance(udratio_pred, "tpr", "fpr")
+# udratio_auc = performance(udratio_pred, "auc")
 
 BrocANN <- function(model) {
-    pred <- prediction(model[,1],Btest$binary_neuron)
-    fpr<- performance(pred,"tpr","fpr")@x.values[[1]]
-    tpr<- performance(pred,"tpr","fpr")@y.values[[1]]
-    result <- cbind(fpr, tpr)
-    results <- cbind.data.frame(result, paste(substitute(model)))
-    colnames(results) <- c("fpr", "tpr", "model")
+    pred = prediction(model[,1],Btest$binary_neuron)
+    fpr = performance(pred,"tpr","fpr")@x.values[[1]]
+    tpr = performance(pred,"tpr","fpr")@y.values[[1]]
+    ROC = cbind(fpr, tpr)
+    ROCs = cbind.data.frame(ROC, paste(substitute(model)))
+    colnames(ROCs) = c("fpr", "tpr", "model")
+    auc = round(performance(pred, "auc")@y.values[[1]], digits = 4)
+    results = list("ROC" = ROCs, "AUC" = auc)
     return(results)
 }
 
-prediction(B.ANN.full[,1], Btest$binary_neuron)
-
-ANN_full_ROC <- BrocANN(B.ANN.full)
-
 Broc <- function(model, dataset) {
-     pred_ <- predict(model, type="prob", newdata=dataset)[,2]
-     pred <- prediction(pred_, Btest$binary_neuron)
-     fpr<- performance(pred,"tpr","fpr")@x.values[[1]]
-     tpr<- performance(pred,"tpr","fpr")@y.values[[1]]
-     result <- cbind(fpr, tpr)
-     result <- cbind.data.frame(result, paste(substitute(model)))
-     colnames(result) <- c("fpr", "tpr", "model")
-     return(result)
+     pred_ = predict(model, type="prob", newdata=dataset)[,2]
+     pred = prediction(pred_, Btest$binary_neuron)
+     fpr = performance(pred,"tpr","fpr")@x.values[[1]]
+     tpr = performance(pred,"tpr","fpr")@y.values[[1]]
+     ROC = cbind(fpr, tpr)
+     ROCs = cbind.data.frame(ROC, paste(substitute(model)))
+     colnames(ROCs) = c("fpr", "tpr", "model")
+     auc = round(performance(pred, "auc")@y.values[[1]], digits = 4)
+     results = list("ROC" = ROCs, "AUC" = auc)
+     return(results)
 }
 
-reg_full_ROC <- Broc(B.reg.full.nocv, Btest)
-rf_full_ROC <- Broc(B.rf.full.nocv, Btest)
+ANN_full_ROC <- BrocANN(B.ANN.full)$ROC
+reg_full_ROC <- Broc(B.reg.full.nocv, Btest)$ROC
+rf_full_ROC <- Broc(B.rf.full.nocv, Btest)$ROC
 
 
-full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC)
+full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, FR_ROC)
 
-ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line()
+levels(full_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.full)$AUC, ")"),
+                            paste0("LASSO(", Broc(B.reg.full.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", Broc(B.rf.full.nocv, Btest)$AUC, ")"),
+                            paste0("FR(", FR_auc, ")"))
 
-ANN_long_ROC <- BrocANN(B.ANN.long)
-reg_long_ROC <- Broc(B.reg.long.nocv, Btest)
-rf_long_ROC <- Broc(B.rf.long.nocv, Btest)
-long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC)
+fig4_1 <- ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line() +
+               geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
+               theme_classic() + 
+               labs(title = "Full", x = "FPR(1-specificity)", y = "TPR(sensitivity)") +
+               theme(legend.position = c(1, 0.01), 
+                     legend.justification = c("right", "bottom"), 
+                     legend.box.just = c("right", "bottom"), 
+                     legend.text.align = 1, 
+                     legend.title = element_blank(), 
+                     plot.title = element_text(hjust = 0.5)) +
+               scale_color_brewer( palette = "Set1")
 
-ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line()
+ANN_long_ROC <- BrocANN(B.ANN.long)$ROC
+reg_long_ROC <- Broc(B.reg.long.nocv, Btest)$ROC
+rf_long_ROC <- Broc(B.rf.long.nocv, Btest)$ROC
+long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC, FR_ROC)
 
-ANN_short_ROC <- BrocANN(B.ANN.short)
-reg_short_ROC <- Broc(B.reg.short.nocv, Btest)
-rf_short_ROC <- Broc(B.rf.short.nocv, Btest)
-short_ROC <- rbind(ANN_short_ROC, reg_short_ROC, rf_short_ROC)
+levels(long_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.long)$AUC, ")"),
+                            paste0("LASSO(", Broc(B.reg.long.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", Broc(B.rf.long.nocv, Btest)$AUC, ")"),
+                            paste0("FR(", FR_auc, ")"))
 
-ggplot(data = short_ROC, aes(fpr, tpr, color = model)) + geom_line()
+fig4_2 <- ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line() +
+               geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
+               theme_classic() + 
+               labs(title = "Long", x = "FPR(1-specificity)", y = "TPR(sensitivity)") +
+               theme(legend.position = c(1, 0.01), 
+                     legend.justification = c("right", "bottom"), 
+                     legend.box.just = c("right", "bottom"), 
+                     legend.text.align = 1,
+                     legend.title = element_blank(), 
+                     plot.title = element_text(hjust = 0.5)) +
+               scale_color_brewer( palette = "Set1")
 
-ANN_ramp_ROC <- BrocANN(B.ANN.ramp)
-reg_ramp_ROC <- Broc(B.reg.ramp.nocv, Btest)
-rf_ramp_ROC <- Broc(B.rf.ramp.nocv, Btest)
-ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC)
+ANN_short_ROC <- BrocANN(B.ANN.short)$ROC
+reg_short_ROC <- Broc(B.reg.short.nocv, Btest)$ROC
+rf_short_ROC <- Broc(B.rf.short.nocv, Btest)$ROC
+short_ROC <- rbind(ANN_short_ROC, reg_short_ROC, rf_short_ROC, FR_ROC)
 
-ggplot(data = ramp_ROC, aes(fpr, tpr, color = model)) + geom_line()
+levels(short_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.short)$AUC, ")"),
+                            paste0("LASSO(", Broc(B.reg.short.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", Broc(B.rf.short.nocv, Btest)$AUC, ")"),
+                            paste0("FR(", FR_auc, ")"))
 
+fig4_3 <- ggplot(data = short_ROC, aes(fpr, tpr, color = model)) + geom_line() +
+               geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
+               theme_classic() + 
+               labs(title = "Short", x = "FPR(1-specificity)", y = "TPR(sensitivity)") +
+               theme(legend.position = c(1, 0.01), 
+                     legend.justification = c("right", "bottom"), 
+                     legend.box.just = c("right", "bottom"), 
+                     legend.text.align = 1,
+                     legend.title = element_blank(), 
+                     plot.title = element_text(hjust = 0.5)) +
+               scale_color_brewer( palette = "Set1")
+
+ANN_ramp_ROC <- BrocANN(B.ANN.ramp)$ROC
+reg_ramp_ROC <- Broc(B.reg.ramp.nocv, Btest)$ROC
+rf_ramp_ROC <- Broc(B.rf.ramp.nocv, Btest)$ROC
+ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC, FR_ROC)
+
+levels(ramp_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.ramp)$AUC, ")"),
+                            paste0("LASSO(", Broc(B.reg.ramp.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", Broc(B.rf.ramp.nocv, Btest)$AUC, ")"),
+                            paste0("FR(", FR_auc, ")"))
+
+
+
+fig4_4 <- ggplot(data = ramp_ROC, aes(fpr, tpr, color = model)) + geom_line() + 
+              geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
+               theme_classic() + 
+               labs(title = "Ramp", x = "FPR(1-specificity)", y = "TPR(sensitivity)") +
+               theme(legend.position = c(1, 0.01), 
+                     legend.justification = c("right", "bottom"), 
+                     legend.box.just = c("right", "bottom"), 
+                     legend.text.align = 1, 
+                     legend.title = element_blank(), 
+                     plot.title = element_text(hjust = 0.5)) +
+               scale_color_brewer( palette = "Set1")
+
+fig4t <- grid.arrange(fig4_1, fig4_2, fig4_3, fig4_4, ncol = 2)
+
+ggsave("fig4t.tiff", fig4t, width = 7, height = 7, units = "in", dpi = 300)
+
+
+getAccu_UL <- function(model){
+  if(model == "ANN")  cat()
+
+}
+
+getAccu_UL(ANN)
+
+models <- c("ANN", "reg", "rf")
+input <- c("full", "long", "short", "ramp")
+
+auc_ANN <- NA
+auc_regfr <- NA
+for(i in 1:3) {
+  if (models[i] == "ANN") {
+    for(j in 1:4) {
+      modelname <- paste0("B.",models[i],".",input[j])
+      model <- get(modelname)
+      auc <- confusionMatrix(as.factor(round(model[,1]) + 1), as.factor(as.integer(Btest$binary_neuron)))
+      auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
+      auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+      colnames(auc_each) <- modelname
+      auc_ANN <- cbind.data.frame(auc_ANN, auc_each)
+      
+      }
+    }
+  else {
+      for(j in 1:4) {
+        modelname <- (paste0("B.",models[i], ".", input[j],".nocv"))
+        model <- get(modelname)
+        auc <- confusionMatrix(predict(model, newdata = Btest), Btest$binary_neuron)
+        auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
+        auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+        colnames(auc_each) <- modelname
+        auc_regfr <- cbind.data.frame(auc_regfr, auc_each)
+        }
+  }
+}
+x.conven <- cre_na_omitted$firing_rate
+preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven))
+
+FR_CM <- confusionMatrix(as.factor(round(preds)+1), as.factor(as.integer(cre_na_omitted$binary_neuron)))
+FR_Accu <- FR_CM$overall[c(1,3:4)]
+
+FR_Accu[1]
+
+auc_binary <- cbind.data.frame(auc_ANN[2:5], auc_regfr[2:9])
+auc_binary <- as.data.frame(t(auc_binary))
+colnames(auc_binary) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
+auc_binary$Accuracy <- as.numeric(as.character(auc_binary$Accuracy))
+auc_binary$LowCI <- as.numeric(as.character(auc_binary$LowCI))
+auc_binary$UpCI <- as.numeric(as.character(auc_binary$UpCI))
+auc_binary$Input <- factor(auc_binary$Input, levels(auc_binary$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
+levels(auc_binary$Model) <- c("ANN", "LASSO", "RF")
+levels(auc_binary$Input) <- c("Full", "Long", "Short", "Ramp")
+
+FR_Accu[1]
+
+fig4b <- ggplot(data = auc_binary, aes(Input, Accuracy, fill = Model)) + 
+  geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
+  geom_hline(aes(yintercept=FR_Accu[1]), color = "purple") +
+  geom_hline(aes(yintercept=FR_Accu[2]), color = "purple", linetype = "dashed") +
+  geom_hline(aes(yintercept=FR_Accu[3]), color = "purple", linetype = "dashed") +
+  theme_classic() + 
+               labs(x = "", y = "Accuracy") +
+               theme(legend.position = "right",
+                     legend.title = element_blank(),
+                     legend.text.align = 1) +
+               scale_fill_brewer( palette = "Set1")
+
+fig4 <- grid.arrange(fig4t, fig4b, ncol = 1, heights = c(1.7,1))
+
+ggsave("fig4.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
 
 ```
 
