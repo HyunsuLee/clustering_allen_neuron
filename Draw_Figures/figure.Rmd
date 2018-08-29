@@ -534,70 +534,73 @@ ggsave("fig4.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
 
 # Draw Figure 5 classification for E tf line, confusion matrix and accuracy bar plot
 ```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+library(ROCR)
+library(magrittr)
+library(caret)
+require(gridExtra)
+
 
 fig5 <-list()
 fig5data <- list()
-library(reshape2)
 levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
 Eline_name <- c("Ctgf", "Cux2","Ndnf","Nr5a1","Ntsr1","Rbp4","Rorb","Scnn1a","Scnn1a","Slc17a6")
 
-tmp<-predict(E.reg.full.nocv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
-fig5data[[1]] <- melt(tmp$table)
-fig5[[1]] <- ggplot(data = fig5data[[1]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-predict(E.rf.full.nocv, newdata = Etest) %>% confusionMatrix(Etest$transgenic_line)
-fig5data[[2]] <- melt(a$table)
-fig5[[2]] <- ggplot(data = fig5data[[2]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-confusionMatrix(as.factor(E.ANN.full[,1]+1),as.factor(as.integer(Etest$transgenic_line)))
-fig5data[[3]] <- melt(a$table)
-fig5[[3]] <- ggplot(data = fig5data[[3]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
+models <- c("ANN", "reg", "rf")
+input <- c("full", "long", "short", "ramp")
 
 
-
-a<-predict(E.reg.long.nocv, newdata = Etest.l) %>% confusionMatrix(Etest$transgenic_line)
-fig5data[[4]] <- melt(a$table)
-fig5[[4]] <- ggplot(data = fig5data[[4]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-as.integer(predict(E.rf.long.nocv, newdata = Etest.l)) %>% confusionMatrix(as.integer(Etest$transgenic_line))
-fig5data[[5]] <- melt(a$table)
-fig5[[5]] <- ggplot(data = fig5data[[5]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-confusionMatrix(E.ANN.long[,1]+1,as.integer(Etest$transgenic_line))
-fig5data[[6]] <- melt(a$table)
-fig5[[6]] <- ggplot(data = fig5data[[6]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-
-a<-as.integer(predict(E.reg.short.nocv, newdata = Etest.s)) %>% confusionMatrix(as.integer(Etest$transgenic_line))
-fig5data[[7]] <- melt(a$table)
-fig5[[7]] <- ggplot(data = fig5data[[7]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-as.integer(predict(E.rf.short.nocv, newdata = Etest.s)) %>% confusionMatrix(as.integer(Etest$transgenic_line))
-fig5data[[8]] <- melt(a$table)
-fig5[[8]] <- ggplot(data = fig5data[[8]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
-
-a<-confusionMatrix(E.ANN.short[,1]+1,as.integer(Etest$transgenic_line))
-fig5data[[9]] <- melt(a$table)
-fig5[[9]] <- ggplot(data = fig5data[[9]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
+E.ANN.full.char <- as.character(E.ANN.full[,1]+1)
+E.ANN.long.char <- as.character(E.ANN.long[,1]+1)
+E.ANN.short.char <- as.character(E.ANN.short[,1]+1)
+E.ANN.ramp.char <- as.character(E.ANN.ramp[,1]+1)
+for(i in 1:10) {
+  E.ANN.full.char[E.ANN.full.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.long.char[E.ANN.long.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.short.char[E.ANN.short.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.ramp.char[E.ANN.ramp.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  
+  }
 
 
-a<-as.integer(predict(E.reg.ramp.nocv, newdata = Etest.r)) %>% confusionMatrix(as.integer(Etest$transgenic_line))
-fig5data[[10]] <- melt(a$table)
-fig5[[10]] <- ggplot(data = fig5data[[10]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
 
-a<-as.integer(predict(E.rf.ramp.nocv, newdata = Etest.r)) %>% confusionMatrix(as.integer(Etest$transgenic_line))
-fig5data[[11]] <- melt(a$table)
-fig5[[11]] <- ggplot(data = fig5data[[11]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
+for(i in 1:3) {
+  if (models[i] == "ANN") {
+    for(j in 1:4) {
+      modelname <- paste0("E.",models[i],".",input[j],".char")
+      model <- get(modelname)
+      model_factor <- factor(model, levels = levels(Etrain$transgenic_line))
+      cm_table <- confusionMatrix(model_factor, Etest$transgenic_line)
+      fig5data[[j]] <- melt(cm_table$table)
+      # auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
+      # auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+      # colnames(auc_each) <- modelname
+      # auc_ANN <- cbind.data.frame(auc_ANN, auc_each)
+      }
+    }
+  else {
+      for(j in 1:4) {
+        modelname <- (paste0("E.",models[i], ".", input[j],".nocv"))
+        model <- get(modelname)
+        cm_table <- confusionMatrix(predict(model, newdata = Etest), Etest$transgenic_line)
+        fig5data[[j+(4*(i-1))]] <- melt(cm_table$table)
+        # auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
+        # auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+        # colnames(auc_each) <- modelname
+        # auc_regfr <- cbind.data.frame(auc_regfr, auc_each)
+        }
+  }
+}
 
-a<-confusionMatrix(E.ANN.ramp[,1]+1,as.integer(Etest$transgenic_line))
-fig5data[[12]] <- melt(a$table)
-fig5[[12]] <- ggplot(data = fig5data[[12]],aes(x=Prediction, y=ordered(Reference,levels=rev(Reference)), fill=value))
 
 
-ggplot(data = fig5data[[2]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
-  scale_y_discrete(limits = rev(levels(fig5data[[2]]$Reference)), labels=rev(Eline_name), position = "right") +
-  scale_x_discrete(labels=Eline_name) +labs(y ="True")
-                                            
+a <- ggplot(data = fig5data[[8]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
+  scale_y_discrete(limits = rev(levels(fig5data[[8]]$Reference)), labels=rev(Eline_name), position = "right") +
+  scale_x_discrete(labels=Eline_name) +labs(y ="True") + geom_text(label=fig5data[[8]]$value)
+
+b<- ggplot() +geom_blank() + theme_void() + annotate("text", label="ANN", x = 5.5, y=3)
+  
+tmp <- grid.arrange(a, b, ncol = 1, heights = c(9,1))                             
 ```
 
 
