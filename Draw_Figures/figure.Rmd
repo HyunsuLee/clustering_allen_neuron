@@ -472,8 +472,8 @@ ggsave("fig4t.tiff", fig4t, width = 7, height = 7, units = "in", dpi = 300)
 models <- c("ANN", "reg", "rf")
 input <- c("full", "long", "short", "ramp")
 
-auc_ANN <- NA
-auc_regfr <- NA
+auc_binary <- NA
+
 for(i in 1:3) {
   if (models[i] == "ANN") {
     for(j in 1:4) {
@@ -483,7 +483,7 @@ for(i in 1:3) {
       auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
       auc_each <- rbind.data.frame(auc_each, models[i], input[j])
       colnames(auc_each) <- modelname
-      auc_ANN <- cbind.data.frame(auc_ANN, auc_each)
+      auc_binary <- cbind.data.frame(auc_binary, auc_each)
       
       }
     }
@@ -495,7 +495,7 @@ for(i in 1:3) {
         auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
         auc_each <- rbind.data.frame(auc_each, models[i], input[j])
         colnames(auc_each) <- modelname
-        auc_regfr <- cbind.data.frame(auc_regfr, auc_each)
+        auc_binary <- cbind.data.frame(auc_binary, auc_each)
         }
   }
 }
@@ -503,7 +503,7 @@ for(i in 1:3) {
 FR_CM <- confusionMatrix(as.factor(round(preds)+1), as.factor(as.integer(cre_na_omitted$binary_neuron)))
 FR_Accu <- FR_CM$overall[c(1,3:4)]
 
-auc_binary <- cbind.data.frame(auc_ANN[2:5], auc_regfr[2:9])
+auc_binary <- cbind.data.frame(auc_binary[2:13])
 auc_binary <- as.data.frame(t(auc_binary))
 colnames(auc_binary) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
 auc_binary$Accuracy <- as.numeric(as.character(auc_binary$Accuracy))
@@ -562,7 +562,7 @@ for(i in 1:10) {
   
   }
 
-
+auc_E <- NA
 
 for(i in 1:3) {
   if (models[i] == "ANN") {
@@ -572,10 +572,10 @@ for(i in 1:3) {
       model_factor <- factor(model, levels = levels(Etrain$transgenic_line))
       cm_table <- confusionMatrix(model_factor, Etest$transgenic_line)
       fig5data[[j]] <- melt(cm_table$table)
-      # auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
-      # auc_each <- rbind.data.frame(auc_each, models[i], input[j])
-      # colnames(auc_each) <- modelname
-      # auc_ANN <- cbind.data.frame(auc_ANN, auc_each)
+      auc_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+      auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+      colnames(auc_each) <- modelname
+      auc_E <- cbind.data.frame(auc_E, auc_each)
       }
     }
   else {
@@ -584,23 +584,83 @@ for(i in 1:3) {
         model <- get(modelname)
         cm_table <- confusionMatrix(predict(model, newdata = Etest), Etest$transgenic_line)
         fig5data[[j+(4*(i-1))]] <- melt(cm_table$table)
-        # auc_each <- as.data.frame(auc$overall[c(1, 3:4)])
-        # auc_each <- rbind.data.frame(auc_each, models[i], input[j])
-        # colnames(auc_each) <- modelname
-        # auc_regfr <- cbind.data.frame(auc_regfr, auc_each)
+        auc_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+        auc_each <- rbind.data.frame(auc_each, models[i], input[j])
+        colnames(auc_each) <- modelname
+        auc_E <- cbind.data.frame(auc_E, auc_each)
         }
   }
 }
 
 
+for(i in 1:12){
+  fig5[[i]]<-ggplot(data = fig5data[[i]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
+  scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "right") +
+  scale_x_discrete(labels=Eline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2")+geom_text(label=fig5data[[i]]$value) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "none") 
+}
 
-a <- ggplot(data = fig5data[[8]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
-  scale_y_discrete(limits = rev(levels(fig5data[[8]]$Reference)), labels=rev(Eline_name), position = "right") +
-  scale_x_discrete(labels=Eline_name) +labs(y ="True") + geom_text(label=fig5data[[8]]$value)
+fig5[[1]] <- fig5[[1]] + scale_x_discrete(position = "top") + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(x = "Full", y = "ANN") + theme(axis.title = element_text(size = rel(1.5)))
+fig5[[2]] <- fig5[[2]] + scale_x_discrete(position = "top")+labs(x = "Long") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig5[[3]] <- fig5[[3]] + scale_x_discrete(position = "top")+labs(x = "Short") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig5[[4]] <- fig5[[4]] + scale_x_discrete(position = "top")+labs(x = "Ramp") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank(), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
 
-b<- ggplot() +geom_blank() + theme_void() + annotate("text", label="ANN", x = 5.5, y=3)
-  
-tmp <- grid.arrange(a, b, ncol = 1, heights = c(9,1))                             
+fig5[[5]] <- fig5[[5]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "LASSO") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
+
+fig5[[8]] <- fig5[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig5[[9]] <- fig5[[9]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "RF") + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig5[[10]] <- fig5[[10]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+fig5[[11]] <- fig5[[11]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig5[[12]] <- fig5[[12]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig5_u_grob <-lapply(fig5, ggplotGrob)
+fig5_u_grob
+fig5_cm <- grid.arrange(grobs = fig5_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
+
+ggsave("fig5cm.tiff", fig5_cm, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+# Accruay bar chart, accurary date was collected above for-loop
+
+auc_E <- cbind.data.frame(auc_E[2:13])
+auc_E <- as.data.frame(t(auc_E))
+colnames(auc_E) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
+auc_E$Accuracy <- as.numeric(as.character(auc_E$Accuracy))
+auc_E$LowCI <- as.numeric(as.character(auc_E$LowCI))
+auc_E$UpCI <- as.numeric(as.character(auc_E$UpCI))
+auc_E$Input <- factor(auc_E$Input, levels(auc_E$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
+levels(auc_E$Model) <- c("ANN", "LASSO", "RF")
+levels(auc_E$Input) <- c("Full", "Long", "Short", "Ramp")
+
+fig5_b <- ggplot(data = auc_E, aes(Input, Accuracy, fill = Model)) + 
+  geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
+
+  theme_classic() + 
+               labs(x = "", y = "Accuracy") +
+               theme(legend.position = "bottom",
+                     legend.title = element_blank(),
+                     legend.margin=margin(t=-0.7, unit='cm'), 
+                     legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
+               scale_fill_brewer( palette = "Set1")
+
+ggsave("fig5accubar.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
+
+
+fig5 <- grid.arrange(fig5_cm, fig5_b, ncol = 1, heights = c(2,1))
+
+ggsave("fig5.tiff", fig5, width = 12, height = 10, units = "in", dpi = 300)
+                          
 ```
 
 
