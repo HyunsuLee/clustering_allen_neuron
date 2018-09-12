@@ -6,11 +6,18 @@ author: "Incheol, Hyunsu"
 
 # Dataset load
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep")
+setwd("../clustering_allen_neuron/Data_prep")
 cre <- read.csv("ephys_data_cre.csv",header=T)
 cre_na_omitted <- na.omit(cre)
 cre_na_omitted <- cre_na_omitted[-43] # cre_reporter_status 제거
 ```
+
+# correction of error miss-classified ndnf line
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+cre_na_omitted$binary_neuron[cre_na_omitted$transgenic_line == "Ndnf-IRES2-dgCre"] <- "Inhibitory"
+```
+
+
 
 # pulling data subset
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
@@ -23,7 +30,7 @@ Iset$transgenic_line <- factor(Iset$transgenic_line)  # Transgenic(Inhibitory) r
 
 # train/test data split(stratified)
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
+# install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
 library(caret)
 
 set.seed(849)
