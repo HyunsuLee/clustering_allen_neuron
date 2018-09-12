@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/Data_prep/divided_data")
+setwd("../Data_prep/divided_data")
 
 Etrain		<- read.csv("Etrain.csv", row.names = "X")
 Etrain.l	<- read.csv("Etrain_long.csv", row.names = "X")
@@ -36,8 +36,12 @@ levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IR
 # set Cross-validation as k-fold
 ```{r, message=FALSE, warning=FALSE}
 require(caret)
-fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
-noCV <- trainControl(method = "none")
+
+seeds <- as.vector(c(1:51), mode = "list")
+for (i in 1:50) seeds[[i]] <- sample.int(1000,3)
+seeds[[51]] <- 849
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5 , seeds = seeds)
+noCV <- trainControl(method = "none" , seeds = seeds)
 
 tuneGrid <- expand.grid(alpha = 1, lambda = seq(0.0001, 1, length = 10))
 noGrid <- expand.grid(alpha = 1, lambda = 0.01)
@@ -195,7 +199,7 @@ a$overall[c(1,3:4)]
 
 # Saving models
 ```{r, message=FALSE, warning=FALSE}
-setwd("/media/hyunsu/data HDD/01.Data&Analysis/clustering_allen_neuron/lasso_rf")
+setwd("../lasso_rf")
 save(E.reg.full.cv, file = "./R_models/E.reg.full.cv.rda")
 save(E.reg.full.nocv, file = "./R_models/E.reg.full.nocv.rda")
 
