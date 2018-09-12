@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import os
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 log_path = '/Iline_long/'
 model_dir = './model/' + log_path # for model saver
 
@@ -29,18 +29,18 @@ random_L2beta = HP_np[Best_model_no][2]
 best_model_dir = model_dir + ('Model'+str(Best_model_no)+'LR'+'{:.3e}'.format(random_learning_rate) 
                 + 'Beta' + '{:.3e}'.format(random_L2beta) + '/')
 
-testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 21]) 
-Y = tf.placeholder(tf.float32, [None, 8]) 
+Y = tf.placeholder(tf.float32, [None, 9]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
 layer1_shape = [21, 16]
-layer2_shape = [16, 10]
-output_shape = [10, 8] 
+layer2_shape = [16, 12]
+output_shape = [12, 9] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())

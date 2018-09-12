@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import os
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 log_path = '/binary_full/'
 model_dir = './model/' + log_path # for model saver
 
@@ -29,7 +29,7 @@ random_L2beta = HP_np[Best_model_no][2]
 best_model_dir = model_dir + ('Model'+str(Best_model_no)+'LR'+'{:.3e}'.format(random_learning_rate) 
                 + 'Beta' + '{:.3e}'.format(random_L2beta) + '/')
 
-testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 43]) # for full model, 43 input features

@@ -10,7 +10,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 """
 there are total 48 csv files.
 
@@ -32,10 +32,10 @@ input_protocol = 'short' # change X place holder and layer shapes
 output_class = 'B'      # change Y place holder and layer shapes
 result_path = './180301_hyperparameter_test/02_1_binary_short_coarse.csv'
 
-trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'Y.csv', delimiter = ',')
 
-testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 18]) 

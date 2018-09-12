@@ -12,9 +12,9 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 log_path = '/binary_long/'
-summaries_dir = './logs/' + log_path + '/2nd/' # for tensorboard summary
+summaries_dir = './logs/' + log_path + '/SEP12/' # for tensorboard summary
 model_dir = './model/' + log_path # for model saver
 
 input_protocol = 'long' # change X place holder and layer shapes
@@ -23,10 +23,10 @@ result_path = './180301_hyperparameter_test/01_2_binary_long_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
 
-trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'Y.csv', delimiter = ',')
 
-testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 21]) 

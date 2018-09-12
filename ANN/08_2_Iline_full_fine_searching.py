@@ -10,7 +10,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 """
 there are total 48 csv files.
 
@@ -18,8 +18,8 @@ created by data_processing_180227.ipynb
     
     3 different output classification task.
     start with "B" means for binary classification(E vs I => outnode 2)
-    "E" stands for excitatory transgenic line classification(outnode 10)
-    "I" stands for inhibitory transgenic line classificiation(outnode 8)
+    "E" stands for excitatory transgenic line classification(outnode 9)
+    "I" stands for inhibitory transgenic line classificiation(outnode 9)
     
     4 different input features.
     full model(all electrophysiology features) 43
@@ -32,22 +32,22 @@ input_protocol = '' # change X place holder and layer shapes
 output_class = 'I'      # change Y place holder and layer shapes
 result_path = './180301_hyperparameter_test/08_2_Iline_full_fine.csv'
 
-trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X_minmax.csv', delimiter = ',')
+trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
 
-testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 43]) 
-Y = tf.placeholder(tf.float32, [None, 8]) 
+Y = tf.placeholder(tf.float32, [None, 9]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [43, 32]
-layer2_shape = [32, 16]
-output_shape = [16, 8] 
+layer1_shape = [43, 36]
+layer2_shape = [36, 18]
+output_shape = [18, 9] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())

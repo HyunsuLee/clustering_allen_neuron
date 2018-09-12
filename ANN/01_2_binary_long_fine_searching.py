@@ -10,7 +10,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-data_path = './180228tensordata_minmax/'
+data_path = './180228tensordata/'
 """
 there are total 48 csv files.
 
@@ -18,8 +18,8 @@ created by data_processing_180227.ipynb
     
     3 different output classification task.
     start with "B" means for binary classification(E vs I => outnode 2)
-    "E" stands for excitatory transgenic line classification(outnode 10)
-    "I" stands for inhibitory transgenic line classificiation(outnode 8)
+    "E" stands for excitatory transgenic line classification(outnode 9)
+    "I" stands for inhibitory transgenic line classificiation(outnode 9)
     
     4 different input features.
     full model(all electrophysiology features) 43
@@ -32,10 +32,10 @@ input_protocol = 'long' # change X place holder and layer shapes
 output_class = 'B'      # change Y place holder and layer shapes
 result_path = './180301_hyperparameter_test/01_2_binary_long_fine.csv'
 
-trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+trainX = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train_' + input_protocol + 'Y.csv', delimiter = ',')
 
-testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X_minmax.csv', delimiter = ',')
+testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 21]) 
