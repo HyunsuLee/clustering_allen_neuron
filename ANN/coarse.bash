@@ -1,6 +1,6 @@
-python3 01_1_binary_long_coarse_searching.py &&
-python3 02_1_binary_short_coarse_searching.py &&
-python3 03_1_binary_ramp_coarse_searching.py &&
+# python3 01_1_binary_long_coarse_searching.py &&
+# python3 02_1_binary_short_coarse_searching.py &&
+# python3 03_1_binary_ramp_coarse_searching.py &&
 python3 04_1_Eline_full_coarse_searching.py &&
 python3 05_1_Eline_long_coarse_searching.py &&
 python3 06_1_Eline_short_coarse_searching.py &&
