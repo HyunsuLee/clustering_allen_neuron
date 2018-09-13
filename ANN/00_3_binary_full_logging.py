@@ -19,7 +19,7 @@ model_dir = './model/' + log_path # for model saver
 
 input_protocol = '' # change X place holder and layer shapes
 output_class = 'B'      # change Y place holder and layer shapes
-result_path = './180301_hyperparameter_test/binary_full_fine1.csv'
+result_path = './180301_hyperparameter_test/00_2_binary_full_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
 
