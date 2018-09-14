@@ -540,6 +540,7 @@ library(ROCR)
 library(magrittr)
 library(caret)
 require(gridExtra)
+library(reshape2)
 
 
 fig5 <-list()
@@ -672,6 +673,7 @@ library(ROCR)
 library(magrittr)
 library(caret)
 require(gridExtra)
+library(reshape2)
 
 
 fig6 <-list()
