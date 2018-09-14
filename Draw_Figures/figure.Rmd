@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("../Data_prep/divided_data")
 
 cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
+cre_na_omitted$binary_neuron[cre_na_omitted$transgenic_line == "Ndnf-IRES2-dgCre"] <- "Inhibitory"
 
 Btrain		<- read.csv("Btrain.csv", row.names = "X")
 Btrain.l	<- read.csv("Btrain_long.csv", header = T, row.names = "X")
@@ -544,7 +545,7 @@ require(gridExtra)
 fig5 <-list()
 fig5data <- list()
 levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
-Eline_name <- c("Ctgf", "Cux2","Ndnf","Nr5a1","Ntsr1","Rbp4","Rorb","Scnn1a","Scnn1a","Slc17a6")
+Eline_name <- c("Ctgf", "Cux2","Nr5a1","Ntsr1","Rbp4","Rorb","Scnn1a-Tg2","Scnn1a-Tg3","Slc17a6")
 
 models <- c("ANN", "reg", "rf")
 input <- c("full", "long", "short", "ramp")
@@ -676,7 +677,7 @@ require(gridExtra)
 fig6 <-list()
 fig6data <- list()
 
-Iline_name <- c("Chat", "Chrna2","Gad2","Htr3a","Nkx2-1","Pvalb","Sst","Vip")
+Iline_name <- c("Chat", "Chrna2","Gad2","Htr3a","Ndnf", "Nkx2.1","Pvalb","Sst","Vip")
 
 models <- c("ANN", "reg", "rf")
 input <- c("full", "long", "short", "ramp")
