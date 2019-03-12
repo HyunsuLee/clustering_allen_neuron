@@ -1,0 +1,98 @@
+---
+title: "Allen brain data diving train and test set, for revising manuscript"
+output: html_document
+author: "Incheol, Hyunsu"
+---
+
+# Dataset load
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+setwd("../clustering_allen_neuron/Data_prep")
+cre_revised <- read.csv("cre_revised.csv",header=T)
+cre_re_na_omitted <- na.omit(cre_revised)
+```
+
+# subsetting data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+Bset <- subset(cre_re_na_omitted, select = -c(transgenic_line))
+Eset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Excitatory", select = -c(binary_neuron))
+Iset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Inhibitory", select = -c(binary_neuron))
+Eset$transgenic_line <- factor(Eset$transgenic_line)  # Transgenic(Excitatory) raw data
+Iset$transgenic_line <- factor(Iset$transgenic_line)
+```
+
+# train/test data split(stratified)
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
+library(caret)
+
+set.seed(849)
+
+BindexTrain <- createDataPartition(Bset$binary_neuron, p = .8, list = F)
+Btrain <- Bset[ BindexTrain, ]
+Btest  <- Bset[-BindexTrain, ]
+
+EindexTrain <- createDataPartition(Eset$transgenic_line, p = .8, list = F)
+Etrain <- Eset[ EindexTrain, ]
+Etest  <- Eset[-EindexTrain, ]
+
+IindexTrain <- createDataPartition(Iset$transgenic_line, p = .8, list = F)
+Itrain <- Iset[ IindexTrain, ]
+Itest  <- Iset[-IindexTrain, ]
+```
+
+# Plot the probabilty plot, check the class propotion between train and test set.
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+par(mfrow = c(3, 2))
+barplot(prop.table(table(Btrain$binary))) 
+barplot(prop.table(table(Btest$binary))) 
+barplot(prop.table(table(Etrain$transgenic_line))) 
+barplot(prop.table(table(Etest$transgenic_line))) 
+barplot(prop.table(table(Itrain$transgenic_line))) 
+barplot(prop.table(table(Itest$transgenic_line))) 
+```
+
+# Draw pie chart for supple figure, stratified class division
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+require(ggplot2)
+Btrain_df <- as.data.frame(table(Btrain$binary))
+theme_set(theme_classic())
+
+DrawPieChart <- function(data_class){
+  df <- as.data.frame(table(data_class))
+  data_title <- deparse(substitute(data_class))
+  return(ggplot(df, aes(x = "", y = Freq, 
+                        fill = factor(data_class))) +
+           geom_bar(width = 1, stat = "identity") +
+           theme(axis.line = element_blank(), 
+                 plot.title = element_text(hjust=0.5),
+                # axis.text.x=element_blank(), 
+                 axis.ticks = element_blank()) +
+           labs(fill="", x=NULL, y=NULL, title= data_title) +
+           coord_polar(theta = "y", start = 0) +
+           scale_fill_brewer(palette = "RdYlBu"))
+}
+
+Btra_pie <- DrawPieChart(Btrain$binary)
+Btes_pie <- DrawPieChart(Btest$binary)
+Etra_pie <- DrawPieChart(Etrain$transgenic_line)
+Etes_pie <- DrawPieChart(Etest$transgenic_line)
+Itra_pie <- DrawPieChart(Itrain$transgenic_line)
+Ites_pie <- DrawPieChart(Itest$transgenic_line)
+
+require(grid)
+require(gridExtra)
+require(Cairo)
+
+pie <- grid.arrange(Btra_pie,Btes_pie,Etra_pie,Etes_pie,Itra_pie,Ites_pie,
+                    ncol=2)
+ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =300)
+```
+
+# subset data generation according to electrophysiological stimuli method
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+require(dplyr)
+long_subset <- select(Btrain, contains("long"))
+# TODO
+
+
+```
