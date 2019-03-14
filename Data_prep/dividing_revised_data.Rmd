@@ -6,18 +6,36 @@ author: "Incheol, Hyunsu"
 
 # Dataset load
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-setwd("../clustering_allen_neuron/Data_prep")
+# setwd("../clustering_allen_neuron/Data_prep")
 cre_revised <- read.csv("cre_revised.csv",header=T)
+layer_exc <- read.csv("layer_revised.csv", header = T)
 cre_re_na_omitted <- na.omit(cre_revised)
+layer_exc_na_omitted <- na.omit(layer_exc)
 ```
 
 # subsetting data
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-Bset <- subset(cre_re_na_omitted, select = -c(transgenic_line))
-Eset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Excitatory", select = -c(binary_neuron))
-Iset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Inhibitory", select = -c(binary_neuron))
+Bset <- subset(cre_re_na_omitted, select = -c(specimen_id, transgenic_line, 
+                                              layer_full, acronym))
+Eset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Excitatory", 
+               select = -c(binary_neuron, specimen_id, layer_full, acronym))
+Iset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Inhibitory", 
+               select = -c(binary_neuron, specimen_id, layer_full, acronym))
+Eset$transgenic_line <- gsub("Cux2-CreERT2", "Cux_Slc17", Eset$transgenic_line)
+Eset$transgenic_line <- gsub("Slc17a6-IRES-Cre", "Cux_Slc17", Eset$transgenic_line)
+Eset$transgenic_line <- gsub("Scnn1a-Tg2-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+Eset$transgenic_line <- gsub("Scnn1a-Tg3-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+Eset$transgenic_line <- gsub("Nr5a1-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+
+Iset$transgenic_line <- gsub("Vip-IRES-Cre", "Vip", Iset$transgenic_line)
+Iset$transgenic_line <- gsub("Chat-IRES-Cre-neo", "Vip", Iset$transgenic_line)
+
 Eset$transgenic_line <- factor(Eset$transgenic_line)  # Transgenic(Excitatory) raw data
 Iset$transgenic_line <- factor(Iset$transgenic_line)
+
+Lset <- subset(layer_exc_na_omitted, select = -c(specimen_id, transgenic_line, 
+                                                 binary_neuron, 
+                                                 layer_full, acronym))
 ```
 
 # train/test data split(stratified)
@@ -38,6 +56,10 @@ Etest  <- Eset[-EindexTrain, ]
 IindexTrain <- createDataPartition(Iset$transgenic_line, p = .8, list = F)
 Itrain <- Iset[ IindexTrain, ]
 Itest  <- Iset[-IindexTrain, ]
+
+LindexTrain <- createDataPartition(Lset$L_tg, p = .8, list = F)
+Ltrain <- Lset[ LindexTrain, ]
+Ltest <- Lset[-LindexTrain, ]
 ```
 
 # Plot the probabilty plot, check the class propotion between train and test set.
@@ -48,7 +70,10 @@ barplot(prop.table(table(Btest$binary)))
 barplot(prop.table(table(Etrain$transgenic_line))) 
 barplot(prop.table(table(Etest$transgenic_line))) 
 barplot(prop.table(table(Itrain$transgenic_line))) 
-barplot(prop.table(table(Itest$transgenic_line))) 
+barplot(prop.table(table(Itest$transgenic_line)))
+barplot(prop.table(table(Ltrain$L_tg))) 
+barplot(prop.table(table(Ltest$L_tg)))
+
 ```
 
 # Draw pie chart for supple figure, stratified class division
@@ -78,12 +103,15 @@ Etra_pie <- DrawPieChart(Etrain$transgenic_line)
 Etes_pie <- DrawPieChart(Etest$transgenic_line)
 Itra_pie <- DrawPieChart(Itrain$transgenic_line)
 Ites_pie <- DrawPieChart(Itest$transgenic_line)
+Ltra_pie <- DrawPieChart(Ltrain$L_tg)
+Ltes_pie <- DrawPieChart(Ltest$L_tg)
 
 require(grid)
 require(gridExtra)
 require(Cairo)
 
-pie <- grid.arrange(Btra_pie,Btes_pie,Etra_pie,Etes_pie,Itra_pie,Ites_pie,
+pie <- grid.arrange(Btra_pie,Btes_pie,Etra_pie,Etes_pie,
+                    Itra_pie,Ites_pie, Ltra_pie, Ltes_pie, 
                     ncol=2)
 ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =300)
 ```
@@ -91,8 +119,113 @@ ggsave("piechart.tiff", plot = pie, units = "in", width = 8, height = 12, dpi =3
 # subset data generation according to electrophysiological stimuli method
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 require(dplyr)
-long_subset <- select(Btrain, contains("long"))
-# TODO
+
+subsetgeneration <-function(dataset, output, type) {
+  if (output ==  "b") {
+     output_c <- subset(dataset, select = c("binary_neuron"))
+  }
+  if (output == "tg") {
+     output_c <- subset(dataset, select = c("transgenic_line"))
+  }
+  if (output == "la"){
+    output_c <- subset(dataset, select = c("L_tg"))
+    
+  }
+  if (type=="l") {
+    long_subset1 <- subset(dataset, select = c("adaptation", "avg_isi", "f_i_curve_slope",
+                                              "latency", "ri", "sag", "tau", "vrest", 
+                                              "firing_rate"))
+    long_subset2 <- select(dataset, contains("long"))
+    longdataset <- cbind(long_subset1, long_subset2)
+    longdataset <- cbind(longdataset, output_c)
+    return(longdataset)}
+  if (type=="s") {
+    shortdataset <- select(dataset, contains("short"))
+    shortdataset <- cbind(shortdataset, output_c)
+    return(shortdataset)}
+  if (type=="r") {
+    rampdataset <- select(dataset, contains("ramp"))
+    rampdataset <- cbind(rampdataset, output_c)
+    return(rampdataset)}
+}
 
 
+Btrain.l <- subsetgeneration(Btrain,"b", "l")
+Btrain.s <- subsetgeneration(Btrain,"b", "s")
+Btrain.r <- subsetgeneration(Btrain,"b", "r")
+
+Btest.l <- subsetgeneration(Btest,"b", "l")
+Btest.s <- subsetgeneration(Btest,"b", "s")
+Btest.r <- subsetgeneration(Btest,"b", "r")
+
+Etrain.l <- subsetgeneration(Etrain,"tg", "l")
+Etrain.s <- subsetgeneration(Etrain,"tg","s")
+Etrain.r <- subsetgeneration(Etrain,"tg","r")
+
+Etest.l <- subsetgeneration(Etest,"tg","l")
+Etest.s <- subsetgeneration(Etest,"tg","s")
+Etest.r <- subsetgeneration(Etest,"tg","r")
+
+Itrain.l <- subsetgeneration(Itrain,"tg","l")
+Itrain.s <- subsetgeneration(Itrain,"tg","s")
+Itrain.r <- subsetgeneration(Itrain,"tg","r")
+
+Itest.l <- subsetgeneration(Itest,"tg","l")
+Itest.s <- subsetgeneration(Itest,"tg","s")
+Itest.r <- subsetgeneration(Itest,"tg","r")
+
+Ltrain.l <- subsetgeneration(Ltrain,"la", "l")
+Ltrain.s <- subsetgeneration(Ltrain,"la","s")
+Ltrain.r <- subsetgeneration(Ltrain,"la","r")
+
+Ltest.l <- subsetgeneration(Ltest,"la","l")
+Ltest.s <- subsetgeneration(Ltest,"la","s")
+Ltest.r <- subsetgeneration(Ltest,"la","r")
+
+```
+
+# save data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+write.csv(cre_re_na_omitted, "./divided_revised_data/cre_na_omitted.csv", row.names = T)
+write.csv(layer_exc_na_omitted, "./divided_revised_data/layer_na_omitted.csv", row.names = T)
+
+write.csv(Btrain,"./divided_revised_data/Btrain.csv", row.names = T)
+write.csv(Btrain.l,"./divided_revised_data/Btrain_long.csv", row.names = T)
+write.csv(Btrain.s,"./divided_revised_data/Btrain_short.csv", row.names = T)
+write.csv(Btrain.r,"./divided_revised_data/Btrain_ramp.csv", row.names = T)
+
+write.csv(Btest,"./divided_revised_data/Btest.csv", row.names = T)
+write.csv(Btest.l,"./divided_revised_data/Btest_long.csv", row.names = T)
+write.csv(Btest.s,"./divided_revised_data/Btest_short.csv", row.names = T)
+write.csv(Btest.r,"./divided_revised_data/Btest_ramp.csv", row.names = T)
+
+write.csv(Etrain,"./divided_revised_data/Etrain.csv", row.names = T)
+write.csv(Etrain.l,"./divided_revised_data/Etrain_long.csv", row.names = T)
+write.csv(Etrain.s,"./divided_revised_data/Etrain_short.csv", row.names = T)
+write.csv(Etrain.r,"./divided_revised_data/Etrain_ramp.csv", row.names = T)
+
+write.csv(Etest,"./divided_revised_data/Etest.csv", row.names = T)
+write.csv(Etest.l,"./divided_revised_data/Etest_long.csv", row.names = T)
+write.csv(Etest.s,"./divided_revised_data/Etest_short.csv", row.names = T)
+write.csv(Etest.r,"./divided_revised_data/Etest_ramp.csv", row.names = T)
+
+write.csv(Itrain,"./divided_revised_data/Itrain.csv", row.names = T)
+write.csv(Itrain.l,"./divided_revised_data/Itrain_long.csv", row.names = T)
+write.csv(Itrain.s,"./divided_revised_data/Itrain_short.csv", row.names = T)
+write.csv(Itrain.r,"./divided_revised_data/Itrain_ramp.csv", row.names = T)
+
+write.csv(Itest,"./divided_revised_data/Itest.csv", row.names = T)
+write.csv(Itest.l,"./divided_revised_data/Itest_long.csv", row.names = T)
+write.csv(Itest.s,"./divided_revised_data/Itest_short.csv", row.names = T)
+write.csv(Itest.r,"./divided_revised_data/Itest_ramp.csv", row.names = T)
+
+write.csv(Ltrain,"./divided_revised_data/Ltrain.csv", row.names = T)
+write.csv(Ltrain.l,"./divided_revised_data/Ltrain_long.csv", row.names = T)
+write.csv(Ltrain.s,"./divided_revised_data/Ltrain_short.csv", row.names = T)
+write.csv(Ltrain.r,"./divided_revised_data/Ltrain_ramp.csv", row.names = T)
+
+write.csv(Ltest,"./divided_revised_data/Ltest.csv", row.names = T)
+write.csv(Ltest.l,"./divided_revised_data/Ltest_long.csv", row.names = T)
+write.csv(Ltest.s,"./divided_revised_data/Ltest_short.csv", row.names = T)
+write.csv(Ltest.r,"./divided_revised_data/Ltest_ramp.csv", row.names = T)
 ```
