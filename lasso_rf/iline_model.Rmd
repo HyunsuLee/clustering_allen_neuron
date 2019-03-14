@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_data")
+setwd("../Data_prep/divided_revised_data")
 
 Itrain		<- read.csv("Itrain.csv", row.names = "X")
 Itrain.l	<- read.csv("Itrain_long.csv", row.names = "X")

@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_data")
+setwd("../Data_prep/divided_revised_data")
 
 Etrain		<- read.csv("Etrain.csv", row.names = "X")
 Etrain.l	<- read.csv("Etrain_long.csv", row.names = "X")
@@ -26,12 +26,12 @@ Etest.r		<- read.csv("Etest_ramp.csv", row.names = "X")
 ```
 
 # Factor add to test set of excitatory line
-```{r, message=FALSE, warning=FALSE}
+
 levels(Etest$transgenic_line) <- c(levels(Etest$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.l$transgenic_line) <- c(levels(Etest.l$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.s$transgenic_line) <- c(levels(Etest.s$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IRES-Cre")
-```
+
 
 # set Cross-validation as k-fold
 ```{r, message=FALSE, warning=FALSE}
@@ -69,7 +69,7 @@ E.reg.ramp.nocv <-caret::train(transgenic_line ~ ., data = Etrain.r, method = "g
 
 ```
 
-# Confusion matrix and predictio accuracy
+# Confusion matrix and prediction accuracy
 ```{r, message=FALSE, warning=FALSE}
 library(magrittr)
 

@@ -12,19 +12,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_data")
+setwd("../Data_prep/divided_revised_data")
 
-cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
+cre_na_omitted <- read.csv("../Data_prep/divided_revised_data/cre_na_omitted.csv", row.names = "X")
 
-Btrain		<- read.csv("Btrain.csv", row.names = "X")
-Btrain.l	<- read.csv("Btrain_long.csv", row.names = "X")
-Btrain.s	<- read.csv("Btrain_short.csv", row.names = "X")
-Btrain.r	<- read.csv("Btrain_ramp.csv", row.names = "X")
+Btrain		<- read.csv("../Data_prep/divided_revised_data/Btrain.csv", row.names = "X")
+Btrain.l	<- read.csv("../Data_prep/divided_revised_data/Btrain_long.csv", row.names = "X")
+Btrain.s	<- read.csv("../Data_prep/divided_revised_data/Btrain_short.csv", row.names = "X")
+Btrain.r	<- read.csv("../Data_prep/divided_revised_data/Btrain_ramp.csv", row.names = "X")
 
-Btest		<- read.csv("Btest.csv", row.names = "X")
-Btest.l		<- read.csv("Btest_long.csv", row.names = "X")
-Btest.s		<- read.csv("Btest_short.csv", row.names = "X")
-Btest.r		<- read.csv("Btest_ramp.csv", row.names = "X")
+Btest		<- read.csv("../Data_prep/divided_revised_data/Btest.csv", row.names = "X")
+Btest.l		<- read.csv("../Data_prep/divided_revised_data/Btest_long.csv", row.names = "X")
+Btest.s		<- read.csv("../Data_prep/divided_revised_data/Btest_short.csv", row.names = "X")
+Btest.r		<- read.csv("../Data_prep/divided_revised_data/Btest_ramp.csv", row.names = "X")
 ```
 
 # Binary prediction (E vs I)

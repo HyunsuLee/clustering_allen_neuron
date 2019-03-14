@@ -11,10 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Data load
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_data")
+setwd("../Data_prep/divided_revised_data")
 
 cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
-cre_na_omitted$binary_neuron[cre_na_omitted$transgenic_line == "Ndnf-IRES2-dgCre"] <- "Inhibitory"
+
 
 Btrain		<- read.csv("Btrain.csv", row.names = "X")
 Btrain.l	<- read.csv("Btrain_long.csv", header = T, row.names = "X")
@@ -88,10 +88,34 @@ require(latex2exp)
 require(gridExtra)
 
 
-fig2data <- cre_na_omitted[ , !names(cre_na_omitted) %in% c("transgenic_line")]
+fig2data <- subset(cre_na_omitted, select = -c(specimen_id, transgenic_line, 
+                                              layer_full, acronym))
 fig2meltdata <- melt(fig2data, id = c("binary_neuron"))
 
-levels(fig2meltdata$variable) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", "$\\FR/I$", "$\\t^{long}_{FT}$", "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$", "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$", "$\\V^{short}_{FT}$", "$\\IR$", "$\\t^{long}_{lat}$", "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$", "$\\t^{short}_{P}$", "$\\V^{long}_{P}$", "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", "$\\R_{m}$", "$\\Sag$", "$\\t^{short}_{ST}$", "$\\V^{short}_{ST}$", "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$", "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$", "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$", "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$", "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$", "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$", "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$", "$\\V^{short}_{T}$",  "$\\rho^{long}$", "$\\rho^{ramp}$", "$\\rho^{short}$", "$\\V_{Sag}$", "$\\V_{rest}$", "$\\H$", "$\\FR")
+levels(fig2meltdata$variable)
+
+
+levels(fig2meltdata$variable) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", 
+                                   "$\\FR/I$", "$\\t^{long}_{FT}$", 
+                                   "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$",
+                                   "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$",
+                                   "$\\V^{short}_{FT}$", "$\\t^{long}_{lat}$",
+                                   "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$",
+                                   "$\\t^{short}_{P}$", "$\\V^{long}_{P}$",
+                                   "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", 
+                                   "$\\R_{input}$", "$\\Sag$", 
+                                   "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$",
+                                   "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$",
+                                   "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$",
+                                   "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$",
+                                   "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$",
+                                   "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$",
+                                   "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$",
+                                   "$\\V^{short}_{T}$",  "$\\rho^{long}$", 
+                                   "$\\rho^{ramp}$", "$\\rho^{short}$", 
+                                   "$\\V_{rest}$", "\\$tau$",
+                                   "$\\FR", "$\\H^{short}$",
+                                   "$\\H^{long}$", "$\\H^{ramp}$")
 
 # 1st row of figure2(mV)
 v_filter <-fig2meltdata[grep("V", fig2meltdata$variable), ]
@@ -129,15 +153,18 @@ fig2_24 <- ggplot(data = sag, aes(x = variable, y = value, fill = binary_neuron)
 
 resist <- fig2meltdata[grep("[^F]R", fig2meltdata$variable), ]
 fig2_25 <- ggplot(data = resist, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = TeX('$\\m\\Omega$')) +
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = TeX('$\\M\\Omega$')) +
   scale_x_discrete(labels = parse(text =TeX(unique(resist$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
 
 fig2_2 <- grid.arrange(fig2_21, fig2_22, fig2_23, fig2_24, fig2_25, widths = c(4,3,1.5,1.5,2), nrow = 1)
 
 # 3rd row of figure2(ms, firing)
-t_long_filter <- rbind(fig2meltdata[grep("t\\^\\{long\\}_\\{[^l]", fig2meltdata$variable), ],
-                  fig2meltdata[grep("t\\^\\{short\\}_\\{T", fig2meltdata$variable), ],
-                  fig2meltdata[grep("t\\^\\{short\\}_\\{S", fig2meltdata$variable), ])
+t_long_filter <- rbind(fig2meltdata[grep("t\\^\\{long\\}_\\{[^l]", 
+                                         fig2meltdata$variable) ,],
+                       fig2meltdata[grep("t\\^\\{short\\}_\\{T", 
+                                         fig2meltdata$variable), ] )
+
+
 fig2_31 <- ggplot(data = t_long_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
   geom_split_violin() + theme_minimal() +theme(legend.position = "none") + labs(x= "", y = "mS") +
   scale_x_discrete(labels = parse(text =TeX(unique(t_long_filter$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
@@ -165,6 +192,7 @@ fig2_35 <- ggplot(data = f_i_curve, aes(x = variable, y = value, fill = binary_n
 fig2_3 <- grid.arrange(fig2_31, fig2_32, fig2_33, fig2_34, fig2_35, widths = c(6,1.5, 1.5, 1.5, 1.5), nrow=1)
 
 
+
 # 4th row of figure2(ms, pA)
 t_filter <- fig2meltdata[grep("t\\^\\{short", fig2meltdata$variable), ]
 
@@ -189,6 +217,7 @@ fig2_4 <- grid.arrange(fig2_41, fig2_42, fig2_43, widths = c(3,4,3), nrow = 1)
 # arrange violin plots
 fig2_l <- grid.arrange(fig2_1, fig2_2, fig2_3, fig2_4, ncol = 1)
 
+# TODO!!! redraw heatmap.
 
 # for heatmap, correlation matrix
 
@@ -223,6 +252,7 @@ fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
 ggsave("fig2_violin.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
 ggsave("fig2_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
+
 ```
 
 

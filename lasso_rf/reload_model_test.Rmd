@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # load data
 
 ```{r}
-setwd("../Data_prep/divided_data")
+setwd("../Data_prep/divided_revised_data")
 
 Btrain		<- read.csv("Btrain.csv", row.names = "X")
 
