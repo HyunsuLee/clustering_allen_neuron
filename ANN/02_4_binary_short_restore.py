@@ -13,16 +13,16 @@ import numpy as np
 import pandas as pd
 import os
 
-data_path = './180228tensordata/'
+data_path = './190314tensordata/'
 log_path = '/binary_short/'
-model_dir = './model/' + log_path # for model saver
+model_dir = './model/' + log_path + '/15MAR19/'# for model saver
 
 input_protocol = 'short' # change X place holder and layer shapes
 output_class = 'B'      # change Y place holder and layer shapes
-result_path = './180301_hyperparameter_test/02_2_binary_short_fine.csv'
+result_path = './190315_hyperparameter_test/02_2_binary_short_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
-Best_model_no = 0
+Best_model_no = "fill"
 
 random_learning_rate = HP_np[Best_model_no][1]
 random_L2beta = HP_np[Best_model_no][2]
@@ -32,15 +32,15 @@ best_model_dir = model_dir + ('Model'+str(Best_model_no)+'LR'+'{:.3e}'.format(ra
 testX = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test_' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 18]) 
+X = tf.placeholder(tf.float32, [None, 11]) 
 Y = tf.placeholder(tf.float32, [None, 2]) # binary E vs I class
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [18, 10]
-layer2_shape = [10, 5]
-output_shape = [5, 2]
+layer1_shape = [11, 6]
+layer2_shape = [6, 4]
+output_shape = [4, 2]
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -117,6 +117,6 @@ model_eval = sess.run(model, feed_dict = {X: testX, Y: testY, keep_prob: 1.0,
                 is_training_holder: 0, L2beta: random_L2beta})
 model_prob = sess.run(tf.nn.softmax(model_eval))
 
-np.savetxt('./results/02_4_binary_short_ANNmodel_prob.csv', model_prob, delimiter=',')
-np.savetxt('./results/Btest_shortY.csv', testY, delimiter = ',')
+np.savetxt('./revised_results/02_4_binary_short_ANNmodel_prob.csv', model_prob, delimiter=',')
+np.savetxt('./revised_results/Btest_shortY.csv', testY, delimiter = ',')
 

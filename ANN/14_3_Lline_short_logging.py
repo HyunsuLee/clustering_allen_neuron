@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 data_path = './190314tensordata/'
-log_path = '/Eline_short/'
+log_path = '/Lline_short/'
 summaries_dir = './logs/' + log_path + '/15MAR19/' # for tensorboard summary
 model_dir = './model/' + log_path + '/15MAR19/'# for model saver
 
