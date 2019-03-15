@@ -10,27 +10,30 @@ import tensorflow as tf
 import numpy as np
 import random
 
-data_path = './180228tensordata/'
+data_path = './190314tensordata/'
+result_path_dir = './190315_hyperparameter_test/'
 """
-there are total 48 csv files.
+there are total 64 csv files.
 
 created by data_processing_180227.ipynb
     
     3 different output classification task.
     start with "B" means for binary classification(E vs I => outnode 2)
-    "E" stands for excitatory transgenic line classification(outnode 9)
-    "I" stands for inhibitory transgenic line classificiation(outnode 9)
-    
+    "E" stands for excitatory transgenic line classification(outnode 6) - according to reviewer comments, merge Tg lines
+    "I" stands for inhibitory transgenic line classificiation(outnode 8) - according to reviewer comments, merge Tg lines
+    "L" stands for excitatory, layer classificiation(outnode 5) - according to reviewer comments, layer specification.
+
     4 different input features.
-    full model(all electrophysiology features) 43
-    _long.csv - long square pulse protocol     21
-    _short.csv - short square pulse protocol   18
-    _ramp.csv - ramp pulse protocol            16
-3 X 4 = 12. 12 different ANN models will be created.
+    full model(all electrophysiology features) 42
+    _long.csv - long square pulse protocol     20
+    _short.csv - short square pulse protocol   11
+    _ramp.csv - ramp pulse protocol            11
+4 X 4 = 16. 16 different ANN models will be created.
 """
+
 input_protocol = '_short' # change X place holder and layer shapes
 output_class = 'I'      # change Y place holder and layer shapes
-result_path = './180301_hyperparameter_test/10_1_Iline_short_coarse.csv'
+result_path = result_path_dir + '10_1_Iline_short_coarse.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -38,16 +41,16 @@ trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv
 testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 18]) 
-Y = tf.placeholder(tf.float32, [None, 9]) 
+X = tf.placeholder(tf.float32, [None, 11]) 
+Y = tf.placeholder(tf.float32, [None, 8]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [18, 15]
-layer2_shape = [15, 12]
-output_shape = [12, 9] 
+layer1_shape = [11, 10]
+layer2_shape = [10, 9]
+output_shape = [9, 8] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())

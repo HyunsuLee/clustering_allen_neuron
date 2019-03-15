@@ -30,10 +30,9 @@ created by data_processing_180227.ipynb
     _ramp.csv - ramp pulse protocol            11
 4 X 4 = 16. 16 different ANN models will be created.
 """
-
-input_protocol = '' # change X place holder and layer shapes
-output_class = 'E'      # change Y place holder and layer shapes
-result_path = result_path_dir + '04_1_Eline_full_coarse.csv'
+input_protocol = '_ramp' # change X place holder and layer shapes
+output_class = 'L'      # change Y place holder and layer shapes
+result_path = result_path_dir + '07_1_Lline_ramp_coarse.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -41,16 +40,16 @@ trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv
 testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 42]) 
-Y = tf.placeholder(tf.float32, [None, 6]) 
+X = tf.placeholder(tf.float32, [None, 11]) 
+Y = tf.placeholder(tf.float32, [None, 5]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [42, 21]
-layer2_shape = [21, 11]
-output_shape = [11, 6] 
+layer1_shape = [11, 10]
+layer2_shape = [10, 8]
+output_shape = [8, 5] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
