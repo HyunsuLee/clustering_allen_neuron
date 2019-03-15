@@ -12,14 +12,14 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
-data_path = './180228tensordata/'
+data_path = './190314tensordata/'
 log_path = '/Iline_full/'
-summaries_dir = './logs/' + log_path + '/SEP12/'# for tensorboard summary
-model_dir = './model/' + log_path # for model saver
+summaries_dir = './logs/' + log_path + '/15MAR19/' # for tensorboard summary
+model_dir = './model/' + log_path + '/15MAR19/'# for model saver
 
 input_protocol = '' # change X place holder and layer shapes
 output_class = 'I'      # change Y place holder and layer shapes
-result_path = './180301_hyperparameter_test/08_2_Iline_full_fine.csv'
+result_path = './190315_hyperparameter_test/08_2_Iline_full_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
 
@@ -29,16 +29,16 @@ trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv
 testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 43]) 
-Y = tf.placeholder(tf.float32, [None, 9]) 
+X = tf.placeholder(tf.float32, [None, 42]) 
+Y = tf.placeholder(tf.float32, [None, 8]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [43, 36]
-layer2_shape = [36, 18]
-output_shape = [18, 9] 
+layer1_shape = [42, 32]
+layer2_shape = [32, 16]
+output_shape = [16, 8] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())

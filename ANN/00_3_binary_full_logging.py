@@ -12,14 +12,14 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 
-data_path = './180228tensordata/'
+data_path = './190314tensordata/'
 log_path = '/binary_full/'
-summaries_dir = './logs/' + log_path + '/SEP12/' # for tensorboard summary
-model_dir = './model/' + log_path # for model saver
+summaries_dir = './logs/' + log_path + '/15MAR19/' # for tensorboard summary
+model_dir = './model/' + log_path + '/15MAR19/'# for model saver
 
 input_protocol = '' # change X place holder and layer shapes
 output_class = 'B'      # change Y place holder and layer shapes
-result_path = './180301_hyperparameter_test/00_2_binary_full_fine.csv'
+result_path = './190315_hyperparameter_test/00_2_binary_full_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
 
@@ -29,14 +29,14 @@ trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv
 testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 43]) # for full model, 43 input features
+X = tf.placeholder(tf.float32, [None, 42]) 
 Y = tf.placeholder(tf.float32, [None, 2]) # binary E vs I class
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [43, 20]
+layer1_shape = [42, 20]
 layer2_shape = [20, 10]
 output_shape = [10, 2]
 

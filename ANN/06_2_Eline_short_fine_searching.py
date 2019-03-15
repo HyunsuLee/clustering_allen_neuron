@@ -32,7 +32,7 @@ created by data_processing_180227.ipynb
 """
 input_protocol = '_short' # change X place holder and layer shapes
 output_class = 'E'      # change Y place holder and layer shapes
-result_path = result_path_dir + '06_1_Eline_short_fine.csv'
+result_path = result_path_dir + '06_2_Eline_short_fine.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
