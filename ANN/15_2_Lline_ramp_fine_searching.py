@@ -31,8 +31,8 @@ created by data_processing_180227.ipynb
 4 X 4 = 16. 16 different ANN models will be created.
 """
 input_protocol = '_ramp' # change X place holder and layer shapes
-output_class = 'E'      # change Y place holder and layer shapes
-result_path = result_path_dir + '07_1_Eline_ramp_fine.csv'
+output_class = 'L'      # change Y place holder and layer shapes
+result_path = result_path_dir + '15_1_Lline_ramp_fine.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -41,7 +41,7 @@ testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv',
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 11]) 
-Y = tf.placeholder(tf.float32, [None, 6]) 
+Y = tf.placeholder(tf.float32, [None, 5]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
@@ -49,7 +49,8 @@ L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
 layer1_shape = [11, 10]
 layer2_shape = [10, 8]
-output_shape = [8, 6] 
+output_shape = [8, 5] 
+
 
 
 def weight_init(shape, name_for_weight):

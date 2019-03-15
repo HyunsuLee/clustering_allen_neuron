@@ -33,7 +33,7 @@ created by data_processing_180227.ipynb
 
 input_protocol = '_long' # change X place holder and layer shapes
 output_class = 'L'      # change Y place holder and layer shapes
-result_path = result_path_dir + '05_1_Lline_long_coarse.csv'
+result_path = result_path_dir + '13_1_Lline_long_coarse.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')

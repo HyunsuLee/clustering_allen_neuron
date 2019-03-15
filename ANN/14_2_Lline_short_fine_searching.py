@@ -30,9 +30,9 @@ created by data_processing_180227.ipynb
     _ramp.csv - ramp pulse protocol            11
 4 X 4 = 16. 16 different ANN models will be created.
 """
-input_protocol = '_ramp' # change X place holder and layer shapes
-output_class = 'E'      # change Y place holder and layer shapes
-result_path = result_path_dir + '07_1_Eline_ramp_fine.csv'
+input_protocol = '_short' # change X place holder and layer shapes
+output_class = 'L'      # change Y place holder and layer shapes
+result_path = result_path_dir + '14_1_Lline_short_fine.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -41,7 +41,7 @@ testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv',
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 11]) 
-Y = tf.placeholder(tf.float32, [None, 6]) 
+Y = tf.placeholder(tf.float32, [None, 5]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
@@ -49,8 +49,7 @@ L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
 layer1_shape = [11, 10]
 layer2_shape = [10, 8]
-output_shape = [8, 6] 
-
+output_shape = [8, 5] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -101,7 +100,7 @@ test_cost_list = []
 test_acc_list = []
 
 for model in range(total_model_test):
-    LR_power = random.uniform(-4.0, -2.6)
+    LR_power = random.uniform(-4.0, -3.1)
     random_learning_rate = 10 ** LR_power
     beta_power = random.uniform(-6.0, -3.0)
     random_L2beta = 10 ** beta_power 
