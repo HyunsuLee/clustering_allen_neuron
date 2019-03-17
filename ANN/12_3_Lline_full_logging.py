@@ -106,7 +106,7 @@ for model in range(total_model_test):
             each_model_dir + '/test') # $ tensorboard --logdir ./logs
     train_writer.add_graph(sess.graph)
 
-    for epoch in range(100000):
+    for epoch in range(50000):
         # for start, end in zip(range(0, len(trainX), batch_size),
         #    range(batch_size, len(trainX)+1, batch_size)):
         #    sess.run(optimizer, feed_dict={X: trainX[start:end], Y: trainY[start:end]})
