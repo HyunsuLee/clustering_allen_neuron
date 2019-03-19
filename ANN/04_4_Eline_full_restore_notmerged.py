@@ -33,14 +33,14 @@ testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv',
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 42]) 
-Y = tf.placeholder(tf.float32, [None, 6]) 
+Y = tf.placeholder(tf.float32, [None, 9]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [42, 21]
-layer2_shape = [21, 11]
-output_shape = [11, 6] 
+layer1_shape = [42, 24]
+layer2_shape = [24, 16]
+output_shape = [16, 9] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -119,6 +119,6 @@ model_prob = sess.run(tf.nn.softmax(model_eval))
 model_argmax = sess.run(tf.argmax(model_prob, 1))
 label_argmax = sess.run(tf.argmax(testY, 1))
 
-np.savetxt('./revised_results/04_4_Eline_full_argmax.csv', model_argmax, delimiter=',')
-np.savetxt('./revised_results/EtestY_argmax.csv', label_argmax, delimiter = ',')
+np.savetxt('./revised_normerged_results/04_4_Eline_full_argmax.csv', model_argmax, delimiter=',')
+np.savetxt('./revised_normerged_results/EtestY_argmax.csv', label_argmax, delimiter = ',')
 
