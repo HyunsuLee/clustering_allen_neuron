@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_revised_data")
+setwd("../Data_prep/divided_revised_notmerged_data")
 
 Itrain		<- read.csv("Itrain.csv", row.names = "X")
 Itrain.l	<- read.csv("Itrain_long.csv", row.names = "X")
@@ -189,28 +189,28 @@ a$overall[c(1,3:4)]
 # Saving models
 ```{r, message=FALSE, warning=FALSE}
 setwd("../lasso_rf")
-save(I.reg.full.cv, file = "./R_models/I.reg.full.cv.rda")
-save(I.reg.full.nocv, file = "./R_models/I.reg.full.nocv.rda")
+save(I.reg.full.cv, file = "./R_notmerged_models/I.reg.full.cv.rda")
+save(I.reg.full.nocv, file = "./R_notmerged_models/I.reg.full.nocv.rda")
 
-save(I.reg.long.cv, file = "./R_models/I.reg.long.cv.rda")
-save(I.reg.long.nocv, file = "./R_models/I.reg.long.nocv.rda")
+save(I.reg.long.cv, file = "./R_notmerged_models/I.reg.long.cv.rda")
+save(I.reg.long.nocv, file = "./R_notmerged_models/I.reg.long.nocv.rda")
 
-save(I.reg.short.cv, file = "./R_models/I.reg.short.cv.rda")
-save(I.reg.short.nocv, file = "./R_models/I.reg.short.nocv.rda")
+save(I.reg.short.cv, file = "./R_notmerged_models/I.reg.short.cv.rda")
+save(I.reg.short.nocv, file = "./R_notmerged_models/I.reg.short.nocv.rda")
 
-save(I.reg.ramp.cv, file = "./R_models/I.reg.ramp.cv.rda")
-save(I.reg.ramp.nocv, file = "./R_models/I.reg.ramp.nocv.rda")
+save(I.reg.ramp.cv, file = "./R_notmerged_models/I.reg.ramp.cv.rda")
+save(I.reg.ramp.nocv, file = "./R_notmerged_models/I.reg.ramp.nocv.rda")
 
-save(I.rf.full.cv, file = "./R_models/I.rf.full.cv.rda")
-save(I.rf.full.nocv, file = "./R_models/I.rf.full.nocv.rda")
+save(I.rf.full.cv, file = "./R_notmerged_models/I.rf.full.cv.rda")
+save(I.rf.full.nocv, file = "./R_notmerged_models/I.rf.full.nocv.rda")
 
-save(I.rf.long.cv, file = "./R_models/I.rf.long.cv.rda")
-save(I.rf.long.nocv, file = "./R_models/I.rf.long.nocv.rda")
+save(I.rf.long.cv, file = "./R_notmerged_models/I.rf.long.cv.rda")
+save(I.rf.long.nocv, file = "./R_notmerged_models/I.rf.long.nocv.rda")
 
-save(I.rf.short.cv, file = "./R_models/I.rf.short.cv.rda")
-save(I.rf.short.nocv, file = "./R_models/I.rf.short.nocv.rda")
+save(I.rf.short.cv, file = "./R_notmerged_models/I.rf.short.cv.rda")
+save(I.rf.short.nocv, file = "./R_notmerged_models/I.rf.short.nocv.rda")
 
-save(I.rf.ramp.cv, file = "./R_models/I.rf.ramp.cv.rda")
-save(I.rf.ramp.nocv, file = "./R_models/I.rf.ramp.nocv.rda")
+save(I.rf.ramp.cv, file = "./R_notmerged_models/I.rf.ramp.cv.rda")
+save(I.rf.ramp.nocv, file = "./R_notmerged_models/I.rf.ramp.nocv.rda")
 
 ```

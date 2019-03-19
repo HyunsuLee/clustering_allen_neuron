@@ -107,6 +107,7 @@ venv.bak/
 .RData
 .Rhistory
 *.tiff
+*.rda
 
 # tensorflow stuff
 **/logs/

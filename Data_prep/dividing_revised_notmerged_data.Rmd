@@ -1,0 +1,158 @@
+---
+title: "revising, not combining Tg line"
+author: "incheol, hyunsu"
+date: "March 19, 2019"
+output: html_document
+---
+
+# Dataset load
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# setwd("../clustering_allen_neuron/Data_prep")
+cre_revised <- read.csv("cre_revised.csv",header=T)
+# layer_exc <- read.csv("layer_revised.csv", header = T)
+cre_re_na_omitted <- na.omit(cre_revised)
+# layer_exc_na_omitted <- na.omit(layer_exc)
+```
+
+# subsetting data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# Bset <- subset(cre_re_na_omitted, select = -c(specimen_id, transgenic_line, 
+                                              layer_full, acronym))
+Eset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Excitatory", 
+               select = -c(binary_neuron, specimen_id, layer_full, acronym))
+Iset <- subset(cre_re_na_omitted, cre_re_na_omitted$binary_neuron=="Inhibitory", 
+               select = -c(binary_neuron, specimen_id, layer_full, acronym))
+# Eset$transgenic_line <- gsub("Cux2-CreERT2", "Cux_Slc17", Eset$transgenic_line)
+# Eset$transgenic_line <- gsub("Slc17a6-IRES-Cre", "Cux_Slc17", Eset$transgenic_line)
+# Eset$transgenic_line <- gsub("Scnn1a-Tg2-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+# Eset$transgenic_line <- gsub("Scnn1a-Tg3-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+# Eset$transgenic_line <- gsub("Nr5a1-Cre", "Nr5a1_Scnn1a", Eset$transgenic_line)
+
+# Iset$transgenic_line <- gsub("Vip-IRES-Cre", "Vip", Iset$transgenic_line)
+# Iset$transgenic_line <- gsub("Chat-IRES-Cre-neo", "Vip", Iset$transgenic_line)
+
+Eset$transgenic_line <- factor(Eset$transgenic_line)  # Transgenic(Excitatory) raw data
+Iset$transgenic_line <- factor(Iset$transgenic_line)
+
+# Lset <- subset(layer_exc_na_omitted, select = -c(specimen_id, transgenic_line, 
+                                                 binary_neuron, 
+                                                 layer_full, acronym))
+```
+
+# train/test data split(stratified)
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# install.packages("caret", repos = "http://cran.r-project.org", dependencies = c("Depends", "Imports", "Suggests"))
+library(caret)
+
+set.seed(849)
+
+# BindexTrain <- createDataPartition(Bset$binary_neuron, p = .8, list = F)
+# Btrain <- Bset[ BindexTrain, ]
+# Btest  <- Bset[-BindexTrain, ]
+
+EindexTrain <- createDataPartition(Eset$transgenic_line, p = .8, list = F)
+Etrain <- Eset[ EindexTrain, ]
+Etest  <- Eset[-EindexTrain, ]
+
+IindexTrain <- createDataPartition(Iset$transgenic_line, p = .8, list = F)
+Itrain <- Iset[ IindexTrain, ]
+Itest  <- Iset[-IindexTrain, ]
+
+# LindexTrain <- createDataPartition(Lset$L_tg, p = .8, list = F)
+# Ltrain <- Lset[ LindexTrain, ]
+# Ltest <- Lset[-LindexTrain, ]
+```
+
+# Plot the probabilty plot, check the class propotion between train and test set.
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+par(mfrow = c(2, 2))
+# barplot(prop.table(table(Btrain$binary))) 
+# barplot(prop.table(table(Btest$binary))) 
+barplot(prop.table(table(Etrain$transgenic_line))) 
+barplot(prop.table(table(Etest$transgenic_line))) 
+barplot(prop.table(table(Itrain$transgenic_line))) 
+barplot(prop.table(table(Itest$transgenic_line)))
+# barplot(prop.table(table(Ltrain$L_tg))) 
+# barplot(prop.table(table(Ltest$L_tg)))
+
+```
+
+
+# subset data generation according to electrophysiological stimuli method
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+require(dplyr)
+
+subsetgeneration <-function(dataset, output, type) {
+  if (output ==  "b") {
+     output_c <- subset(dataset, select = c("binary_neuron"))
+  }
+  if (output == "tg") {
+     output_c <- subset(dataset, select = c("transgenic_line"))
+  }
+  if (output == "la"){
+    output_c <- subset(dataset, select = c("L_tg"))
+    
+  }
+  if (type=="l") {
+    long_subset1 <- subset(dataset, select = c("adaptation", "avg_isi", "f_i_curve_slope",
+                                              "latency", "ri", "sag", "tau", "vrest", 
+                                              "firing_rate"))
+    long_subset2 <- select(dataset, contains("long"))
+    longdataset <- cbind(long_subset1, long_subset2)
+    longdataset <- cbind(longdataset, output_c)
+    return(longdataset)}
+  if (type=="s") {
+    shortdataset <- select(dataset, contains("short"))
+    shortdataset <- cbind(shortdataset, output_c)
+    return(shortdataset)}
+  if (type=="r") {
+    rampdataset <- select(dataset, contains("ramp"))
+    rampdataset <- cbind(rampdataset, output_c)
+    return(rampdataset)}
+}
+
+
+Etrain.l <- subsetgeneration(Etrain,"tg", "l")
+Etrain.s <- subsetgeneration(Etrain,"tg","s")
+Etrain.r <- subsetgeneration(Etrain,"tg","r")
+
+Etest.l <- subsetgeneration(Etest,"tg","l")
+Etest.s <- subsetgeneration(Etest,"tg","s")
+Etest.r <- subsetgeneration(Etest,"tg","r")
+
+Itrain.l <- subsetgeneration(Itrain,"tg","l")
+Itrain.s <- subsetgeneration(Itrain,"tg","s")
+Itrain.r <- subsetgeneration(Itrain,"tg","r")
+
+Itest.l <- subsetgeneration(Itest,"tg","l")
+Itest.s <- subsetgeneration(Itest,"tg","s")
+Itest.r <- subsetgeneration(Itest,"tg","r")
+
+
+```
+
+# save data
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
+write.csv(Etrain,"./divided_revised_notmerged_data/Etrain.csv", row.names = T)
+write.csv(Etrain.l,"./divided_revised_notmerged_data/Etrain_long.csv", row.names = T)
+write.csv(Etrain.s,"./divided_revised_notmerged_data/Etrain_short.csv", row.names = T)
+write.csv(Etrain.r,"./divided_revised_notmerged_data/Etrain_ramp.csv", row.names = T)
+
+write.csv(Etest,"./divided_revised_notmerged_data/Etest.csv", row.names = T)
+write.csv(Etest.l,"./divided_revised_notmerged_data/Etest_long.csv", row.names = T)
+write.csv(Etest.s,"./divided_revised_notmerged_data/Etest_short.csv", row.names = T)
+write.csv(Etest.r,"./divided_revised_notmerged_data/Etest_ramp.csv", row.names = T)
+
+write.csv(Itrain,"./divided_revised_notmerged_data/Itrain.csv", row.names = T)
+write.csv(Itrain.l,"./divided_revised_notmerged_data/Itrain_long.csv", row.names = T)
+write.csv(Itrain.s,"./divided_revised_notmerged_data/Itrain_short.csv", row.names = T)
+write.csv(Itrain.r,"./divided_revised_notmerged_data/Itrain_ramp.csv", row.names = T)
+
+write.csv(Itest,"./divided_revised_notmerged_data/Itest.csv", row.names = T)
+write.csv(Itest.l,"./divided_revised_notmerged_data/Itest_long.csv", row.names = T)
+write.csv(Itest.s,"./divided_revised_notmerged_data/Itest_short.csv", row.names = T)
+write.csv(Itest.r,"./divided_revised_notmerged_data/Itest_ramp.csv", row.names = T)
+
+
+```

@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data load
 
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_revised_data")
+setwd("../Data_prep/divided_revised_notmerged_data")
 
 Etrain		<- read.csv("Etrain.csv", row.names = "X")
 Etrain.l	<- read.csv("Etrain_long.csv", row.names = "X")
@@ -26,12 +26,12 @@ Etest.r		<- read.csv("Etest_ramp.csv", row.names = "X")
 ```
 
 # Factor add to test set of excitatory line
-
+```{r, message=F, warning=F}
 levels(Etest$transgenic_line) <- c(levels(Etest$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.l$transgenic_line) <- c(levels(Etest.l$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.s$transgenic_line) <- c(levels(Etest.s$transgenic_line),"Slc17a6-IRES-Cre")
 levels(Etest.r$transgenic_line) <- c(levels(Etest.r$transgenic_line),"Slc17a6-IRES-Cre")
-
+```
 
 # set Cross-validation as k-fold
 ```{r, message=FALSE, warning=FALSE}
@@ -200,29 +200,29 @@ a$overall[c(1,3:4)]
 # Saving models
 ```{r, message=FALSE, warning=FALSE}
 setwd("../lasso_rf")
-save(E.reg.full.cv, file = "./R_models/E.reg.full.cv.rda")
-save(E.reg.full.nocv, file = "./R_models/E.reg.full.nocv.rda")
+save(E.reg.full.cv, file = "./R_notmerged_models/E.reg.full.cv.rda")
+save(E.reg.full.nocv, file = "./R_notmerged_models/E.reg.full.nocv.rda")
 
-save(E.reg.long.cv, file = "./R_models/E.reg.long.cv.rda")
-save(E.reg.long.nocv, file = "./R_models/E.reg.long.nocv.rda")
+save(E.reg.long.cv, file = "./R_notmerged_models/E.reg.long.cv.rda")
+save(E.reg.long.nocv, file = "./R_notmerged_models/E.reg.long.nocv.rda")
 
-save(E.reg.short.cv, file = "./R_models/E.reg.short.cv.rda")
-save(E.reg.short.nocv, file = "./R_models/E.reg.short.nocv.rda")
+save(E.reg.short.cv, file = "./R_notmerged_models/E.reg.short.cv.rda")
+save(E.reg.short.nocv, file = "./R_notmerged_models/E.reg.short.nocv.rda")
 
-save(E.reg.ramp.cv, file = "./R_models/E.reg.ramp.cv.rda")
-save(E.reg.ramp.nocv, file = "./R_models/E.reg.ramp.nocv.rda")
+save(E.reg.ramp.cv, file = "./R_notmerged_models/E.reg.ramp.cv.rda")
+save(E.reg.ramp.nocv, file = "./R_notmerged_models/E.reg.ramp.nocv.rda")
 
-save(E.rf.full.cv, file = "./R_models/E.rf.full.cv.rda")
-save(E.rf.full.nocv, file = "./R_models/E.rf.full.nocv.rda")
+save(E.rf.full.cv, file = "./R_notmerged_models/E.rf.full.cv.rda")
+save(E.rf.full.nocv, file = "./R_notmerged_models/E.rf.full.nocv.rda")
 
-save(E.rf.long.cv, file = "./R_models/E.rf.long.cv.rda")
-save(E.rf.long.nocv, file = "./R_models/E.rf.long.nocv.rda")
+save(E.rf.long.cv, file = "./R_notmerged_models/E.rf.long.cv.rda")
+save(E.rf.long.nocv, file = "./R_notmerged_models/E.rf.long.nocv.rda")
 
-save(E.rf.short.cv, file = "./R_models/E.rf.short.cv.rda")
-save(E.rf.short.nocv, file = "./R_models/E.rf.short.nocv.rda")
+save(E.rf.short.cv, file = "./R_notmerged_models/E.rf.short.cv.rda")
+save(E.rf.short.nocv, file = "./R_notmerged_models/E.rf.short.nocv.rda")
 
-save(E.rf.ramp.cv, file = "./R_models/E.rf.ramp.cv.rda")
-save(E.rf.ramp.nocv, file = "./R_models/E.rf.ramp.nocv.rda")
+save(E.rf.ramp.cv, file = "./R_notmerged_models/E.rf.ramp.cv.rda")
+save(E.rf.ramp.nocv, file = "./R_notmerged_models/E.rf.ramp.nocv.rda")
 
 ```
 
