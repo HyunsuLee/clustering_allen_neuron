@@ -1,38 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-created 2018-03-02
+created 2018-03-01
 @author: hyunsu
 """
 # for tensorflow ANN. hyperparameter searching test python
+# and writing tensorboard logs
+# testing 10 models, fine tuned results load 
 
 import tensorflow as tf
 import numpy as np
-import random
+import pandas as pd
 
 data_path = './190319tensordata/'
-result_path_dir = './190319_hyperparameter_test/'
-"""
-there are total 64 csv files.
+log_path = '/Iline_long/'
+summaries_dir = './logs/' + log_path + '/20MAR19/' # for tensorboard summary
+model_dir = './model/' + log_path + '/20MAR19/'# for model saver
 
-created by data_processing_180227.ipynb
-    
-    3 different output classification task.
-  
-    "E" stands for excitatory transgenic line classification(outnode 9) - original Tg lines
-    "I" stands for inhibitory transgenic line classificiation(outnode 9) - original Tg lines
-    
-
-    4 different input features.
-    full model(all electrophysiology features) 42
-    _long.csv - long square pulse protocol     20
-    _short.csv - short square pulse protocol   11
-    _ramp.csv - ramp pulse protocol            11
-4 X 4 = 16. 16 different ANN models will be created.
-"""
 input_protocol = '_long' # change X place holder and layer shapes
 output_class = 'I'      # change Y place holder and layer shapes
-result_path = result_path_dir + '09_2_Iline_long_fine.csv'
+result_path = './190319_hyperparameter_test/09_2_Iline_long_fine.csv'
+HP_df = pd.read_csv(result_path)
+HP_np = np.array(HP_df.sort_values('test_cost').head(10))
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -41,7 +30,7 @@ testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv',
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 20]) 
-Y = tf.placeholder(tf.float32, [None, 9]) 
+Y = tf.placeholder(tf.float32, [None, 8]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
@@ -49,7 +38,7 @@ L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
 layer1_shape = [20, 15]
 layer2_shape = [15, 12]
-output_shape = [12, 9] 
+output_shape = [12, 8] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -60,23 +49,26 @@ with tf.name_scope('layer1'):
     W1 = weight_init(layer1_shape, 'W1')
     z1 = tf.matmul(X, W1)
     BN1 = tf.contrib.layers.batch_norm(z1, center = True, scale = True,
-        is_training = is_training_holder) 
+          is_training = is_training_holder) 
     L1 = tf.nn.relu(BN1)
     L1 = tf.nn.dropout(L1, keep_prob)
-    
+    tf.summary.histogram('W1', W1)
+
 with tf.name_scope('layer2'):
     W2 = weight_init(layer2_shape, 'W2')
     z2 = tf.matmul(L1, W2)
     BN2 = tf.contrib.layers.batch_norm(z2, center = True, scale = True,
-        is_training = is_training_holder) 
+          is_training = is_training_holder) 
     L2 = tf.nn.relu(BN2)
     L2 = tf.nn.dropout(L2, keep_prob)
-   
+    tf.summary.histogram('W2', W2)
+
 with tf.name_scope('output'):
     W3 = weight_init(output_shape, 'W3')
     b3 = tf.Variable(tf.random_normal([output_shape[1]]))
     model = tf.matmul(L2, W3) + b3
-    
+    tf.summary.histogram('W3', W3)
+
 with tf.name_scope('optimizer'):
     base_cost = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=Y))
@@ -86,53 +78,64 @@ with tf.name_scope('optimizer'):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
-    
+    tf.summary.scalar('cost', cost)
+
 with tf.name_scope("accuracy"):
     is_correct = tf.equal(tf.argmax(model, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
-    
+    tf.summary.scalar("accuracy", accuracy)
+
+summ = tf.summary.merge_all()
+saver = tf.train.Saver()
 sess = tf.Session()
 
-total_model_test = 50 
-LR_list = []
-L2beta_list = []
-test_cost_list = []
-test_acc_list = []
+total_model_test = 10 
+
 
 for model in range(total_model_test):
-    LR_power = random.uniform(-4.0, -3.0)
-    random_learning_rate = 10 ** LR_power
-    beta_power = random.uniform(-6.0, -4.0)
-    random_L2beta = 10 ** beta_power 
+    random_learning_rate = HP_np[model][1]
+    random_L2beta = HP_np[model][2]
+    
     sess.run(tf.global_variables_initializer())
-    for epoch in range(2000):
+    
+    each_model_dir = ('Model'+str(model)+'LR'+'{:.3e}'.format(random_learning_rate) 
+                + 'Beta' + '{:.3e}'.format(random_L2beta) + '/')
+    train_writer = tf.summary.FileWriter(summaries_dir + 
+            each_model_dir + '/train')
+    test_writer = tf.summary.FileWriter(summaries_dir + 
+            each_model_dir + '/test') # $ tensorboard --logdir ./logs
+    train_writer.add_graph(sess.graph)
+
+    for epoch in range(200000):
+        # for start, end in zip(range(0, len(trainX), batch_size),
+        #    range(batch_size, len(trainX)+1, batch_size)):
+        #    sess.run(optimizer, feed_dict={X: trainX[start:end], Y: trainY[start:end]})
         sess.run(optimizer, feed_dict={X: trainX, Y: trainY, keep_prob: 0.5, 
                             is_training_holder: 1, learning_rate: random_learning_rate,
                             L2beta: random_L2beta})
-        test_acc, test_cost = sess.run([accuracy, cost], 
-                        feed_dict={X: testX, Y: testY, keep_prob: 1.0, 
-                        is_training_holder: 0, learning_rate: random_learning_rate,
+        if (epoch % 500) == 0:
+            train_acc, train_summ = sess.run([accuracy, summ], 
+                        feed_dict={X: trainX, Y: trainY, keep_prob: 1.0, 
+                        is_training_holder: 1, learning_rate: random_learning_rate, 
                         L2beta: random_L2beta})
+            train_writer.add_summary(train_summ, epoch)
+
+            test_acc, test_summ = sess.run([accuracy, summ], 
+                        feed_dict={X: testX, Y: testY, keep_prob: 1.0, 
+                        is_training_holder: 0, learning_rate: random_learning_rate, 
+                        L2beta: random_L2beta})
+            test_writer.add_summary(test_summ, epoch)
+        if (epoch % 5000) == 0:
+            test_cost = sess.run(cost, 
+                        feed_dict={X: testX, Y: testY, keep_prob: 1.0, 
+                        is_training_holder: 0, learning_rate: random_learning_rate, 
+                        L2beta: random_L2beta})
+            print('Epoch:', '%04d' % (epoch +1), 'Test cost:', '{:.4f}'.format(test_cost),
+                  'Test accuracy:', '{:.4f}'.format(test_acc))
+            saver.save(sess, model_dir + each_model_dir + '/ANN.ckpt', epoch)
     print('Learning rate:', '{:.4e}'.format(random_learning_rate), 
     'L2beta:', '{:.4e}'.format(random_L2beta),
     'Test cost:', '{:.4f}'.format(test_cost),
-    'Test accuracy:', '{:.4f}'.format(test_acc), 'Model:', str(model+1),'/',str(total_model_test))
-    LR_list += [random_learning_rate]
-    L2beta_list += [random_L2beta]
-    test_cost_list += [test_cost]
-    test_acc_list += [test_acc]
-
-combine_list = [LR_list] + [L2beta_list] + [test_cost_list] + [test_acc_list]
-combine_list = np.array(combine_list)
-
-import pandas as pd
-
-results = pd.DataFrame(combine_list.T, 
-        columns=['learning_rate', 'L2_beta', 'test_cost', 'test_accuracy'])
-
-results.to_csv(result_path)
-
-
-
+    'Test accuracy:', '{:.4f}'.format(test_acc), 'Model:', str(model),'/',str(total_model_test))
 
 

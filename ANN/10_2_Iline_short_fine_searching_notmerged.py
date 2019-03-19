@@ -42,7 +42,7 @@ testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv',
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
 X = tf.placeholder(tf.float32, [None, 11]) 
-Y = tf.placeholder(tf.float32, [None, 8]) 
+Y = tf.placeholder(tf.float32, [None, 9]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
