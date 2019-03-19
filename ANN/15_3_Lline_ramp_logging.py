@@ -106,14 +106,14 @@ for model in range(total_model_test):
             each_model_dir + '/test') # $ tensorboard --logdir ./logs
     train_writer.add_graph(sess.graph)
 
-    for epoch in range(50000):
+    for epoch in range(200000):
         # for start, end in zip(range(0, len(trainX), batch_size),
         #    range(batch_size, len(trainX)+1, batch_size)):
         #    sess.run(optimizer, feed_dict={X: trainX[start:end], Y: trainY[start:end]})
         sess.run(optimizer, feed_dict={X: trainX, Y: trainY, keep_prob: 0.5, 
                             is_training_holder: 1, learning_rate: random_learning_rate,
                             L2beta: random_L2beta})
-        if (epoch % 50) == 0:
+        if (epoch % 500) == 0:
             train_acc, train_summ = sess.run([accuracy, summ], 
                         feed_dict={X: trainX, Y: trainY, keep_prob: 1.0, 
                         is_training_holder: 1, learning_rate: random_learning_rate, 
@@ -125,7 +125,7 @@ for model in range(total_model_test):
                         is_training_holder: 0, learning_rate: random_learning_rate, 
                         L2beta: random_L2beta})
             test_writer.add_summary(test_summ, epoch)
-        if (epoch % 500) == 0:
+        if (epoch % 5000) == 0:
             test_cost = sess.run(cost, 
                         feed_dict={X: testX, Y: testY, keep_prob: 1.0, 
                         is_training_holder: 0, learning_rate: random_learning_rate, 
