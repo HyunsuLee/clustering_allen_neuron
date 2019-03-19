@@ -30,10 +30,9 @@ created by data_processing_180227.ipynb
     _ramp.csv - ramp pulse protocol            11
 4 X 4 = 16. 16 different ANN models will be created.
 """
-
-input_protocol = '_short' # change X place holder and layer shapes
+input_protocol = '_long' # change X place holder and layer shapes
 output_class = 'I'      # change Y place holder and layer shapes
-result_path = result_path_dir + '10_2_Iline_short_fine.csv'
+result_path = result_path_dir + '09_2_Iline_long_fine.csv'
 
 trainX = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'X.csv', delimiter = ',')
 trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv', delimiter = ',')
@@ -41,16 +40,16 @@ trainY = np.loadtxt(data_path + output_class + 'train' + input_protocol + 'Y.csv
 testX = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'X.csv', delimiter = ',')
 testY = np.loadtxt(data_path + output_class + 'test' + input_protocol + 'Y.csv', delimiter = ',')
 
-X = tf.placeholder(tf.float32, [None, 11]) 
+X = tf.placeholder(tf.float32, [None, 20]) 
 Y = tf.placeholder(tf.float32, [None, 8]) 
 keep_prob = tf.placeholder(tf.float32)
 is_training_holder = tf.placeholder(tf.bool)
 learning_rate = tf.placeholder(tf.float32)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
-layer1_shape = [11, 10]
-layer2_shape = [10, 10]
-output_shape = [10, 9] 
+layer1_shape = [20, 15]
+layer2_shape = [15, 12]
+output_shape = [12, 9] 
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -94,19 +93,19 @@ with tf.name_scope("accuracy"):
     
 sess = tf.Session()
 
-total_model_test = 500 
+total_model_test = 50 
 LR_list = []
 L2beta_list = []
 test_cost_list = []
 test_acc_list = []
 
 for model in range(total_model_test):
-    LR_power = random.uniform(-4.0, -2.5)
+    LR_power = random.uniform(-4.0, -3.0)
     random_learning_rate = 10 ** LR_power
-    beta_power = random.uniform(-5.7, -2.3)
+    beta_power = random.uniform(-6.0, -4.0)
     random_L2beta = 10 ** beta_power 
     sess.run(tf.global_variables_initializer())
-    for epoch in range(5000):
+    for epoch in range(2000):
         sess.run(optimizer, feed_dict={X: trainX, Y: trainY, keep_prob: 0.5, 
                             is_training_holder: 1, learning_rate: random_learning_rate,
                             L2beta: random_L2beta})

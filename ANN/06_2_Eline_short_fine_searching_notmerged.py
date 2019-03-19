@@ -93,7 +93,7 @@ with tf.name_scope("accuracy"):
     
 sess = tf.Session()
 
-total_model_test = 500 
+total_model_test = 50 
 LR_list = []
 L2beta_list = []
 test_cost_list = []
@@ -105,7 +105,7 @@ for model in range(total_model_test):
     beta_power = random.uniform(-6.0, -3.0)
     random_L2beta = 10 ** beta_power 
     sess.run(tf.global_variables_initializer())
-    for epoch in range(10000):
+    for epoch in range(2000):
         sess.run(optimizer, feed_dict={X: trainX, Y: trainY, keep_prob: 0.5, 
                             is_training_holder: 1, learning_rate: random_learning_rate,
                             L2beta: random_L2beta})
