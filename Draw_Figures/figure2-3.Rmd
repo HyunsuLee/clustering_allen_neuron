@@ -707,8 +707,8 @@ for(i in 1:3) {
 }
 
 
-rho_CM <- confusionMatrix(as.factor(round(short_predicted)+1), as.factor(as.integer(cre_na_omitted$binary_neuron)))
-FR_Accu <- FR_CM$overall[c(1,3:4)]
+rho_CM <- confusionMatrix(as.factor(abs(round(preds_rho_long)-1)+1),   as.factor(as.integer(cre_na_omitted$binary_neuron))) # the ordering of labelling switched
+rho_Accu <- rho_CM$overall[c(1,3:4)]
 
 accu_binary <- cbind.data.frame(accu_binary[2:13])
 accu_binary <- as.data.frame(t(accu_binary))
@@ -723,9 +723,9 @@ levels(accu_binary$Input) <- c("Full", "Long", "Short", "Ramp")
 fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) + 
   geom_bar(stat = "identity", color = "black", position = position_dodge()) +
   geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
-  geom_hline(aes(yintercept=FR_Accu[1]), color = "purple") +
-  geom_hline(aes(yintercept=FR_Accu[2]), color = "purple", linetype = "dashed") +
-  geom_hline(aes(yintercept=FR_Accu[3]), color = "purple", linetype = "dashed") +
+  geom_hline(aes(yintercept=rho_Accu[1]), color = "purple") +
+  geom_hline(aes(yintercept=rho_Accu[2]), color = "purple", linetype = "dashed") +
+  geom_hline(aes(yintercept=rho_Accu[3]), color = "purple", linetype = "dashed") +
   theme_classic() + 
                labs(x = "", y = "Accuracy") +
                theme(legend.position = "right",
