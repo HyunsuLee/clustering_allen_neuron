@@ -22,7 +22,7 @@ output_class = 'L'      # change Y place holder and layer shapes
 result_path = './190315_hyperparameter_test/12_2_Lline_full_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
-Best_model_no = 4
+Best_model_no = 2
 
 random_learning_rate = HP_np[Best_model_no][1]
 random_L2beta = HP_np[Best_model_no][2]

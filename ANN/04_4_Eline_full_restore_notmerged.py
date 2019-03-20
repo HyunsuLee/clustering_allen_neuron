@@ -22,7 +22,7 @@ output_class = 'E'      # change Y place holder and layer shapes
 result_path = './190319_hyperparameter_test/04_2_Eline_full_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
-Best_model_no = "fill"
+Best_model_no = 6
 
 random_learning_rate = HP_np[Best_model_no][1]
 random_L2beta = HP_np[Best_model_no][2]

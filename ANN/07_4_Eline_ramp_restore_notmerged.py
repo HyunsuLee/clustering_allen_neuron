@@ -15,14 +15,14 @@ import os
 
 data_path = './190319tensordata/'
 log_path = '/Eline_ramp/'
-model_dir = './model/' + log_path + '20MAR19/'# for model saver
+model_dir = './model/' + log_path + '/20MAR19/'# for model saver
 
 input_protocol = '_ramp' # change X place holder and layer shapes
 output_class = 'E'      # change Y place holder and layer shapes
 result_path = './190319_hyperparameter_test/07_2_Eline_ramp_fine.csv'
 HP_df = pd.read_csv(result_path)
 HP_np = np.array(HP_df.sort_values('test_cost').head(10))
-Best_model_no = 6
+Best_model_no = 8
 
 random_learning_rate = HP_np[Best_model_no][1]
 random_L2beta = HP_np[Best_model_no][2]
