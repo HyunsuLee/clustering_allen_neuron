@@ -45,6 +45,42 @@ Itest		<- read.csv("Itest.csv", row.names = "X")
 Itest.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
 Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
 Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
+
+Ltrain		<- read.csv("Ltrain.csv", row.names = "X")
+Ltrain.l	<- read.csv("Ltrain_long.csv", header = T, row.names = "X")
+Ltrain.s	<- read.csv("Ltrain_short.csv", header = T, row.names = "X")
+Ltrain.r	<- read.csv("Ltrain_ramp.csv", header = T, row.names = "X")
+
+Ltest		<- read.csv("Ltest.csv", row.names = "X")
+Ltest.l		<- read.csv("Ltest_long.csv", header = T, row.names = "X")
+Ltest.s		<- read.csv("Ltest_short.csv", header = T, row.names = "X")
+Ltest.r		<- read.csv("Ltest_ramp.csv", header = T, row.names = "X")
+```
+
+# Data load(not merged Tg line)
+```{r, message=FALSE, warning=FALSE}
+setwd("../Data_prep/divided_revised_notmerged_data")
+
+Etrain_n		<- read.csv("Etrain.csv", row.names = "X")
+Etrain_n.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
+Etrain_n.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
+Etrain_n.r	<- read.csv("Etrain_ramp.csv", header = T, row.names = "X")
+
+Etest_n		<- read.csv("Etest.csv", row.names = "X")
+Etest_n.l		<- read.csv("Etest_long.csv", header = T, row.names = "X")
+Etest_n.s		<- read.csv("Etest_short.csv", header = T, row.names = "X")
+Etest_n.r		<- read.csv("Etest_ramp.csv", header = T, row.names = "X")
+
+Itrain_n		<- read.csv("Itrain.csv", row.names = "X")
+Itrain_n.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
+Itrain_n.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
+Itrain_n.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
+
+Itest_n		<- read.csv("Itest.csv", row.names = "X")
+Itest_n.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
+Itest_n.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
+Itest_n.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
+
 ```
 
 
@@ -113,7 +149,7 @@ levels(fig2meltdata$variable) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$",
                                    "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$",
                                    "$\\V^{short}_{T}$",  "$\\rho^{long}$", 
                                    "$\\rho^{ramp}$", "$\\rho^{short}$", 
-                                   "$\\V_{rest}$", "\\$tau$",
+                                   "$\\V_{rest}$", "$\\tau$",
                                    "$\\FR", "$\\H^{short}$",
                                    "$\\H^{long}$", "$\\H^{ramp}$")
 
@@ -121,10 +157,23 @@ levels(fig2meltdata$variable) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$",
 v_filter <-fig2meltdata[grep("V", fig2meltdata$variable), ]
 v_filter_wo_p <- v_filter[grep("[^P]\\}\\$$", v_filter$variable), ]
 
-fig2_1 <- ggplot(data = v_filter_wo_p, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal() + theme(legend.position = "right") + labs(x = "", y = "mV") +
+fig2_11 <- ggplot(data = v_filter_wo_p, 
+                  aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") +labs(x = "", y = "mV") +
    scale_x_discrete(labels = parse(text = TeX(unique(v_filter_wo_p$variable)))) + 
-  scale_fill_discrete(name = "", labels = c("E", "I")) +theme(axis.title.y = element_text(size = rel(0.7))) + theme(legend.text = element_text(size = rel(0.5)))
+  theme(axis.title.y = element_text(size = rel(0.7))) 
+
+sag <- fig2meltdata[grep("Sag\\$", fig2meltdata$variable), ]
+fig2_12 <- ggplot(data = sag, 
+                  aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "right") + 
+  labs(x = "", y = "") +
+  scale_x_discrete(labels = parse(text =TeX(unique(sag$variable)))) + 
+  theme(axis.title.y = element_text(size = rel(0.7))) + 
+  scale_fill_discrete(name = "", labels = c("E", "I")) +
+  theme(legend.text = element_text(size = rel(0.5)))
+
+fig2_1 <- grid.arrange(fig2_11, fig2_12, widths = c(10, 2), nrow = 1)
 
 # https://chemicalstatistician.wordpress.com/2018/03/10/use-unique-instead-of-levels-to-find-the-possible-values-of-a-character-variable-in-r/
 
@@ -146,17 +195,21 @@ fig2_23 <- ggplot(data = adaptation, aes(x = variable, y = value, fill = binary_
   geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "") + 
   scale_x_discrete(labels = parse(text =TeX(unique(adaptation$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
 
-sag <- fig2meltdata[grep("Sag\\$", fig2meltdata$variable), ]
-fig2_24 <- ggplot(data = sag, aes(x = variable, y = value, fill = binary_neuron)) + 
-  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = "") +
-  scale_x_discrete(labels = parse(text =TeX(unique(sag$variable)))) + theme(axis.title.y = element_text(size = rel(0.7)))
+tau <- fig2meltdata[grep("tau\\$", fig2meltdata$variable), ]
+fig2_24 <- ggplot(data = tau, 
+                  aes(x = variable, y = value, fill = binary_neuron)) + 
+  geom_split_violin() + theme_minimal() + theme(legend.position = "none") + 
+  labs(x = "", y = "ms") +
+  scale_x_discrete(labels = parse(text =TeX(unique(tau$variable)))) + 
+  theme(axis.title.y = element_text(size = rel(0.7))) 
+
 
 resist <- fig2meltdata[grep("[^F]R", fig2meltdata$variable), ]
 fig2_25 <- ggplot(data = resist, aes(x = variable, y = value, fill = binary_neuron)) + 
   geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x = "", y = TeX('$\\M\\Omega$')) +
   scale_x_discrete(labels = parse(text =TeX(unique(resist$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
 
-fig2_2 <- grid.arrange(fig2_21, fig2_22, fig2_23, fig2_24, fig2_25, widths = c(4,3,1.5,1.5,2), nrow = 1)
+fig2_2 <- grid.arrange(fig2_21, fig2_22, fig2_23, fig2_24, fig2_25, widths = c(5,3,2,1.5,2), nrow = 1)
 
 # 3rd row of figure2(ms, firing)
 t_long_filter <- rbind(fig2meltdata[grep("t\\^\\{long\\}_\\{[^l]", 
@@ -196,8 +249,11 @@ fig2_3 <- grid.arrange(fig2_31, fig2_32, fig2_33, fig2_34, fig2_35, widths = c(6
 # 4th row of figure2(ms, pA)
 t_filter <- fig2meltdata[grep("t\\^\\{short", fig2meltdata$variable), ]
 
-t_short_filter <- rbind(t_filter[grep("FT\\}\\$$", t_filter$variable), ], 
+t_short_filter_all <- rbind(t_filter[grep("FT\\}\\$$", t_filter$variable), ], 
                         t_filter[grep("[^T]\\}\\$$", t_filter$variable), ])
+
+t_short_filter <- subset(t_short_filter_all, 0 < value & value < 12)
+
 fig2_41 <- ggplot(data = t_short_filter, aes(x = variable, y = value, fill = binary_neuron)) + 
   geom_split_violin() + theme_minimal() + theme(legend.position = "none") + labs(x= "", y = "mS") +
   scale_x_discrete(labels = parse(text =TeX(unique(t_short_filter$variable)))) +theme(axis.title.y = element_text(size = rel(0.7)))
@@ -217,41 +273,62 @@ fig2_4 <- grid.arrange(fig2_41, fig2_42, fig2_43, widths = c(3,4,3), nrow = 1)
 # arrange violin plots
 fig2_l <- grid.arrange(fig2_1, fig2_2, fig2_3, fig2_4, ncol = 1)
 
-# TODO!!! redraw heatmap.
-
 # for heatmap, correlation matrix
 
-fig2data_numeric <- cre_na_omitted[ , !names(cre_na_omitted) %in% c("transgenic_line", "binary_neuron")]
+fig2data_numeric <- subset(fig2data, select = -c(binary_neuron))
 
-colnames(fig2data_numeric) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", "$\\FR/I$", "$\\t^{long}_{FT}$", "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$", "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$", "$\\V^{short}_{FT}$", "$\\IR$", "$\\t^{long}_{lat}$", "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$", "$\\t^{short}_{P}$", "$\\V^{long}_{P}$", "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", "$\\R_{m}$", "$\\Sag$", "$\\t^{short}_{ST}$", "$\\V^{short}_{ST}$", "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$", "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$", "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$", "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$", "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$", "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$", "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$", "$\\V^{short}_{T}$",  "$\\rho^{long}$", "$\\rho^{ramp}$", "$\\rho^{short}$", "$\\V_{Sag}$", "$\\V_{rest}$", "$\\H$", "$\\FR")
+colnames(fig2data_numeric) <- c("$\\Alpha_{index}$", "$\\ISI_{avg}$", 
+                                   "$\\FR/I$", "$\\t^{long}_{FT}$", 
+                                   "$\\t^{ramp}_{FT}$", "$\\t^{short}_{FT}$",
+                                   "$\\V^{long}_{FT}$", "$\\V^{ramp}_{FT}$",
+                                   "$\\V^{short}_{FT}$", "$\\t^{long}_{lat}$",
+                                   "$\\t^{long}_{P}$", "$\\t^{ramp}_{P}$",
+                                   "$\\t^{short}_{P}$", "$\\V^{long}_{P}$",
+                                   "$\\V^{ramp}_{P}$", "$\\V^{short}_{P}$", 
+                                   "$\\R_{input}$", "$\\Sag$", 
+                                   "$\\I^{long}_{\\Theta}$", "$\\I^{ramp}_{\\Theta}$",
+                                   "$\\I^{short}_{\\Theta}$", "$\\t^{long}_{\\Theta}$",
+                                   "$\\t^{ramp}_{\\Theta}$", "$\\t^{short}_{\\Theta}$",
+                                   "$\\V^{long}_{\\Theta}$", "$\\V^{ramp}_{\\Theta}$",
+                                   "$\\V^{short}_{\\Theta}$", "$\\t^{long}_{T}$",
+                                   "$\\t^{ramp}_{T}$", "$\\t^{short}_{T}$",
+                                   "$\\V^{long}_{T}$", "$\\V^{ramp}_{T}$",
+                                   "$\\V^{short}_{T}$",  "$\\rho^{long}$", 
+                                   "$\\rho^{ramp}$", "$\\rho^{short}$", 
+                                   "$\\V_{rest}$", "$\\tau$",
+                                   "$\\FR", "$\\H^{short}$",
+                                   "$\\H^{long}$", "$\\H^{ramp}$")
 
 
 
-cormat <- cor(fig2data_numeric)
+cormat_posneg <- cor(fig2data_numeric)
+
+cormat <- abs(cormat_posneg) 
 reorder_cormat <- function(cormat){
 # Use correlation between variables as distance
-dd <- as.dist((1-cormat)/2)
-hc <- hclust(dd)
-cormat <-cormat[hc$order, hc$order]
+   dd <- as.dist((1-cormat))
+   hc <- hclust(dd, method = "centroid")
+   cormat <-cormat[hc$order, hc$order]
 }
+
 cormat <- reorder_cormat(cormat)
 melted_fig2b<-melt(cormat)
 melted_fig2b$Var1 <- factor(melted_fig2b$Var1, levels=unique(as.character(melted_fig2b$Var1)))
 melted_fig2b$Var2 <- factor(melted_fig2b$Var2, levels=unique(as.character(melted_fig2b$Var2)))
 fig2_r <- ggplot(data=melted_fig2b, aes(Var1, Var2, fill=value)) + 
       geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
-                    midpoint = 0, limit = c(-1,1), space = "Lab", name="r") +
+                    midpoint = 0, limit = c(0,1), space = "Lab", name="r") +
       labs(x = "", y = "")+
       theme(legend.position = "bottom") + 
       scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$Var1)))) + 
       theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +
       theme(axis.title.y = element_text(size = rel(0.7)))
 
-fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
+# fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 
-ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
-ggsave("fig2_violin.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
-ggsave("fig2_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
+# ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
+ggsave("fig2_revised.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
+ggsave("SF1_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
 
 ```
 
@@ -277,6 +354,28 @@ fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) +
   theme(legend.position = "top", axis.text.x = element_blank())
 
 
+levels(Etest_n$transgenic_line) <- levels(Etrain_n$transgenic_line)
+
+Etrain_n_freq <- as.data.frame(prop.table(table(Etrain_n$transgenic_line)))
+Etest_n_freq <- as.data.frame(prop.table(table(Etest_n$transgenic_line)))
+Etrain_n_freq <- cbind(Etrain_n_freq, 'train')
+Etest_n_freq <- cbind(Etest_n_freq, 'test')
+colnames(Etrain_n_freq) <- c("neuron", "probability", "set")
+colnames(Etest_n_freq) <- c("neuron", "probability", "set")
+Epro_n <- rbind(Etrain_n_freq, Etest_n_freq)
+
+fig3_2 <- ggplot(Epro_n, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
+  labs(x = "", y = "", fill  = "excitatory line") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Epro_n$set))) + 
+  theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks.y = element_blank())
+
+levels(Etrain$transgenic_line) <- c("Ctgf-T2A-dgCre", "Cux&Slc17a6", "Nr5a1&Scnn1a", 
+                                    "Ntsr1-Cre_GN220", "Rbp4-Cre_KL100", "Rorb-IRES2-Cre")
+levels(Etest$transgenic_line) <- c("Ctgf-T2A-dgCre", "Cux&Slc17a6", "Nr5a1&Scnn1a", 
+                                    "Ntsr1-Cre_GN220", "Rbp4-Cre_KL100", "Rorb-IRES2-Cre")
+
 Etrain_freq <- as.data.frame(prop.table(table(Etrain$transgenic_line)))
 Etest_freq <- as.data.frame(prop.table(table(Etest$transgenic_line)))
 Etrain_freq <- cbind(Etrain_freq, 'train')
@@ -285,12 +384,29 @@ colnames(Etrain_freq) <- c("neuron", "probability", "set")
 colnames(Etest_freq) <- c("neuron", "probability", "set")
 Epro <- rbind(Etrain_freq, Etest_freq)
 
-fig3_2 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) + 
+fig3_3 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) + 
   geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
   labs(x = "", y = "", fill  = "excitatory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Epro$set))) + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Epro_n$set))) + 
   theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks.y = element_blank())
+
+
+Itrain_n_freq <- as.data.frame(prop.table(table(Itrain_n$transgenic_line)))
+Itest_n_freq <- as.data.frame(prop.table(table(Itest_n$transgenic_line)))
+Itrain_n_freq <- cbind(Itrain_n_freq, 'train')
+Itest_n_freq <- cbind(Itest_n_freq, 'test')
+colnames(Itrain_n_freq) <- c("neuron", "probability", "set")
+colnames(Itest_n_freq) <- c("neuron", "probability", "set")
+Ipro_n <- rbind(Itrain_n_freq, Itest_n_freq)
+
+fig3_4 <- ggplot(Ipro_n, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
+  labs(x = "", fill = "inhibitory line") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
+  theme(legend.position = "top", axis.ticks.y = element_blank())
+
 
 Itrain_freq <- as.data.frame(prop.table(table(Itrain$transgenic_line)))
 Itest_freq <- as.data.frame(prop.table(table(Itest$transgenic_line)))
@@ -300,23 +416,43 @@ colnames(Itrain_freq) <- c("neuron", "probability", "set")
 colnames(Itest_freq) <- c("neuron", "probability", "set")
 Ipro <- rbind(Itrain_freq, Itest_freq)
 
-fig3_3 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + 
+fig3_5 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + 
   geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
   labs(x = "", fill = "inhibitory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro$set))) + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
   theme(legend.position = "top", axis.ticks.y = element_blank())
 
-fig3 <- grid.arrange(fig3_1, fig3_2, fig3_3, ncol = 1)
+levels(Ltrain$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
+levels(Ltest$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
 
-ggsave("fig3.tiff", fig3, width = 10, height = 5, units = "in", dpi = 300)
+Ltrain_freq <- as.data.frame(prop.table(table(Ltrain$L_tg)))
+Ltest_freq <- as.data.frame(prop.table(table(Ltest$L_tg)))
+Ltrain_freq <- cbind(Ltrain_freq, 'train')
+Ltest_freq <- cbind(Ltest_freq, 'test')
+colnames(Ltrain_freq) <- c("neuron", "probability", "set")
+colnames(Ltest_freq) <- c("neuron", "probability", "set")
+Lpro <- rbind(Ltrain_freq, Ltest_freq)
+
+fig3_6 <- ggplot(Lpro, aes(x = set, y = probability, fill = neuron)) + 
+  geom_bar(stat="identity") + 
+  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
+  labs(x = "", fill = "layer location of excitary neuron restricted to Cre") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
+  theme(legend.position = "top", axis.ticks.y = element_blank())
+
+fig3_6
+
+fig3 <- grid.arrange(fig3_1, fig3_2, fig3_3, fig3_4, fig3_5, fig3_6, ncol = 1)
+
+ggsave("SF2.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
 ```
 
 # Binary classification
 
 ## Load ANN results
 ```{r, message=FALSE, warning=FALSE}
-setwd("../ANN/results")
+setwd("../ANN/revised_results")
 B.ANN.full <-read.csv("00_4_binary_full_ANNmodel_prob.csv",header=F) 
 B.ANN.long <-read.csv("01_4_binary_long_ANNmodel_prob.csv",header=F)
 B.ANN.short<-read.csv("02_4_binary_short_ANNmodel_prob.csv",header=F)
@@ -331,6 +467,11 @@ I.ANN.full <-read.csv("08_4_Iline_full_argmax.csv",header=F)
 I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
 I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
 I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
+
+L.ANN.full <-read.csv("12_4_Lline_full_argmax.csv",header=F) 
+L.ANN.long <-read.csv("13_4_Lline_long_argmax.csv",header=F)
+L.ANN.short<-read.csv("14_4_Lline_short_argmax.csv",header=F)
+L.ANN.ramp <-read.csv("15_4_Lline_ramp_argmax.csv",header=F)
 ```
 
 # Load LASSO and RF models
@@ -355,10 +496,11 @@ library(ROCR)
 library(magrittr)
 library(caret)
 require(gridExtra)
+library(latex2exp)
 
 
 # Making conventional ROC curve by detemining by firing_rate.
-require(ROCR)
+
 x.conven <- cre_na_omitted$firing_rate
 preds = (x.conven-min(x.conven))/(max(x.conven)-min(x.conven))
 
@@ -369,12 +511,39 @@ colnames(FR_ROC) <- c("fpr", "tpr", "model")
 FR_auc  = round(performance(conventional.pred,"auc")@y.values[[1]], digits = 4)
 
 
-# x.updownratio <- cre_na_omitted$upstroke_downstroke_ratio_short_square
-# preds_ud = (x.updownratio-min(x.updownratio))/(max(x.updownratio)-min(x.updownratio))
+# Making ROC curve determined by Rho
+rho_short <- cre_na_omitted$upstroke_downstroke_ratio_short_square
+rho_long <- cre_na_omitted$upstroke_downstroke_ratio_long_square
+rho_ramp <- cre_na_omitted$upstroke_downstroke_ratio_ramp
 
-# udratio_pred = prediction(preds_ud, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
-# udratio_perf = performance(udratio_pred, "tpr", "fpr")
-# udratio_auc = performance(udratio_pred, "auc")
+preds_rho_short = (rho_short-min(rho_short))/(max(rho_short)-min(rho_short))
+preds_rho_long = (rho_long-min(rho_long))/(max(rho_long)-min(rho_long))
+preds_rho_ramp = (rho_ramp-min(rho_ramp))/(max(rho_ramp)-min(rho_ramp))
+
+short_predicted = prediction(preds_rho_short, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
+long_predicted = prediction(preds_rho_long, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
+ramp_predicted = prediction(preds_rho_ramp, cre_na_omitted$binary_neuron, label.ordering = c("Inhibitory", "Excitatory"))
+
+
+
+rho_short_ROC <- cbind(performance(short_predicted,"tpr","fpr")@x.values[[1]], 
+                 performance(short_predicted,"tpr","fpr")@y.values[[1]])
+rho_long_ROC <- cbind(performance(long_predicted,"tpr","fpr")@x.values[[1]], 
+                 performance(long_predicted,"tpr","fpr")@y.values[[1]])
+rho_ramp_ROC <- cbind(performance(ramp_predicted,"tpr","fpr")@x.values[[1]], 
+                 performance(ramp_predicted,"tpr","fpr")@y.values[[1]])
+
+rho_short_ROC <- cbind.data.frame(rho_short_ROC, c("rho_short"))
+rho_long_ROC <- cbind.data.frame(rho_long_ROC, c("rho_long"))
+rho_ramp_ROC <- cbind.data.frame(rho_ramp_ROC, c("rho_ramp"))
+
+colnames(rho_short_ROC) <- c("fpr", "tpr", "model")
+colnames(rho_long_ROC) <- c("fpr", "tpr", "model")
+colnames(rho_ramp_ROC) <- c("fpr", "tpr", "model")
+
+rho_short_auc  = round(performance(short_predicted,"auc")@y.values[[1]], digits = 4)
+rho_long_auc  = round(performance(long_predicted,"auc")@y.values[[1]], digits = 4)
+rho_ramp_auc  = round(performance(ramp_predicted,"auc")@y.values[[1]], digits = 4)
 
 BrocANN <- function(model) {
     pred = prediction(model[,1],Btest$binary_neuron)
@@ -406,12 +575,13 @@ reg_full_ROC <- Broc(B.reg.full.nocv, Btest)$ROC
 rf_full_ROC <- Broc(B.rf.full.nocv, Btest)$ROC
 
 
-full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, FR_ROC)
+full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, rho_ROC)
 
+ 
 levels(full_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.full)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.full.nocv, Btest)$AUC, ")"),
                             paste0("RF(", Broc(B.rf.full.nocv, Btest)$AUC, ")"),
-                            paste0("FR(", FR_auc, ")"))
+                            paste0("$\\rho^{short}$(", rho_short_auc, ")"))
 
 fig4_1 <- ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
@@ -423,17 +593,19 @@ fig4_1 <- ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                      legend.text.align = 1, 
                      legend.title = element_blank(), 
                      plot.title = element_text(hjust = 0.5)) +
-               scale_color_brewer( palette = "Set1")
+               scale_color_brewer(palette = "Set1", 
+                                  labels = parse(text =TeX(unique(full_ROC$model)))) 
+fig4_1
 
 ANN_long_ROC <- BrocANN(B.ANN.long)$ROC
 reg_long_ROC <- Broc(B.reg.long.nocv, Btest)$ROC
 rf_long_ROC <- Broc(B.rf.long.nocv, Btest)$ROC
-long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC, FR_ROC)
+long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC, rho_long_ROC)
 
 levels(long_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.long)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.long.nocv, Btest)$AUC, ")"),
                             paste0("RF(", Broc(B.rf.long.nocv, Btest)$AUC, ")"),
-                            paste0("FR(", FR_auc, ")"))
+                            paste0("$\\rho^{long}$(", rho_long_auc, ")"))
 
 fig4_2 <- ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
@@ -445,17 +617,18 @@ fig4_2 <- ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                      legend.text.align = 1,
                      legend.title = element_blank(), 
                      plot.title = element_text(hjust = 0.5)) +
-               scale_color_brewer( palette = "Set1")
+               scale_color_brewer( palette = "Set1", 
+                                   labels = parse(text =TeX(unique(long_ROC$model))))
 
 ANN_short_ROC <- BrocANN(B.ANN.short)$ROC
 reg_short_ROC <- Broc(B.reg.short.nocv, Btest)$ROC
 rf_short_ROC <- Broc(B.rf.short.nocv, Btest)$ROC
-short_ROC <- rbind(ANN_short_ROC, reg_short_ROC, rf_short_ROC, FR_ROC)
+short_ROC <- rbind(ANN_short_ROC, reg_short_ROC, rf_short_ROC, rho_short_ROC)
 
 levels(short_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.short)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.short.nocv, Btest)$AUC, ")"),
                             paste0("RF(", Broc(B.rf.short.nocv, Btest)$AUC, ")"),
-                            paste0("FR(", FR_auc, ")"))
+                            paste0("$\\rho^{short}$(", rho_short_auc, ")"))
 
 fig4_3 <- ggplot(data = short_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
@@ -467,17 +640,18 @@ fig4_3 <- ggplot(data = short_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                      legend.text.align = 1,
                      legend.title = element_blank(), 
                      plot.title = element_text(hjust = 0.5)) +
-               scale_color_brewer( palette = "Set1")
+               scale_color_brewer( palette = "Set1",
+                                   labels = parse(text =TeX(unique(short_ROC$model))))
 
 ANN_ramp_ROC <- BrocANN(B.ANN.ramp)$ROC
 reg_ramp_ROC <- Broc(B.reg.ramp.nocv, Btest)$ROC
 rf_ramp_ROC <- Broc(B.rf.ramp.nocv, Btest)$ROC
-ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC, FR_ROC)
+ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC, rho_ramp_ROC)
 
 levels(ramp_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.ramp)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.ramp.nocv, Btest)$AUC, ")"),
                             paste0("RF(", Broc(B.rf.ramp.nocv, Btest)$AUC, ")"),
-                            paste0("FR(", FR_auc, ")"))
+                            paste0("$\\rho^{ramp}$(", rho_ramp_auc, ")"))
 
 
 
@@ -491,7 +665,8 @@ fig4_4 <- ggplot(data = ramp_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                      legend.text.align = 1, 
                      legend.title = element_blank(), 
                      plot.title = element_text(hjust = 0.5)) +
-               scale_color_brewer( palette = "Set1")
+               scale_color_brewer( palette = "Set1",
+                                   labels = parse(text =TeX(unique(ramp_ROC$model))))
 
 fig4t <- grid.arrange(fig4_1, fig4_2, fig4_3, fig4_4, ncol = 2)
 
@@ -531,7 +706,8 @@ for(i in 1:3) {
   }
 }
 
-FR_CM <- confusionMatrix(as.factor(round(preds)+1), as.factor(as.integer(cre_na_omitted$binary_neuron)))
+
+rho_CM <- confusionMatrix(as.factor(round(short_predicted)+1), as.factor(as.integer(cre_na_omitted$binary_neuron)))
 FR_Accu <- FR_CM$overall[c(1,3:4)]
 
 accu_binary <- cbind.data.frame(accu_binary[2:13])
