@@ -1,0 +1,360 @@
+---
+title: "Drawing Figure for manuscript"
+author: "incheol, hyunsu"
+date: "July 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data load(not merged Tg line)
+```{r, message=FALSE, warning=FALSE}
+setwd("../Data_prep/divided_revised_notmerged_data")
+
+Etrain		<- read.csv("Etrain.csv", row.names = "X")
+Etrain.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
+Etrain.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
+Etrain.r	<- read.csv("Etrain_ramp.csv", header = T, row.names = "X")
+
+Etest		<- read.csv("Etest.csv", row.names = "X")
+Etest.l		<- read.csv("Etest_long.csv", header = T, row.names = "X")
+Etest.s		<- read.csv("Etest_short.csv", header = T, row.names = "X")
+Etest.r		<- read.csv("Etest_ramp.csv", header = T, row.names = "X")
+
+Itrain		<- read.csv("Itrain.csv", row.names = "X")
+Itrain.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
+Itrain.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
+Itrain.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
+
+Itest	 <- read.csv("Itest.csv", row.names = "X")
+Itest.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
+Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
+Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
+
+levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
+```
+
+# Binary classification
+
+## Load ANN results
+```{r, message=FALSE, warning=FALSE}
+setwd("../ANN/revised_notmerged_results")
+
+E.ANN.full <-read.csv("04_4_Eline_full_argmax.csv",header=F) 
+E.ANN.long <-read.csv("05_4_Eline_long_argmax.csv",header=F)
+E.ANN.short<-read.csv("06_4_Eline_short_argmax.csv",header=F)
+E.ANN.ramp <-read.csv("07_4_Eline_ramp_argmax.csv",header=F)
+
+I.ANN.full <-read.csv("08_4_Iline_full_argmax.csv",header=F) 
+I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
+I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
+I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
+
+```
+
+# Load LASSO and RF models
+```{r, message=FALSE, warning=FALSE}
+setwd("../lasso_rf/")
+
+model_files <- list.files("./R_notmerged_models/")
+
+for (file_name in model_files){
+  load(paste0("./R_notmerged_models/",file_name))
+} 
+
+
+```
+
+
+
+# Draw Figure 4 classification for E tf line(not merged and post hoc add) 
+# confusion matrix and accuracy bar plot
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+library(ROCR)
+library(magrittr)
+library(caret)
+require(gridExtra)
+library(reshape2)
+
+
+fig5 <-list()
+fig5data <- list()
+
+Eline_name <- c("Ctgf", "Cux2&Slc17", "Nr5a1&Scnn1a", "Ntsr1", "Rbp4", "Rorb")
+
+models <- c("ANN", "reg", "rf")
+input <- c("full", "long", "short", "ramp")
+
+
+E.ANN.full.char <- as.character(E.ANN.full[,1]+1)
+E.ANN.long.char <- as.character(E.ANN.long[,1]+1)
+E.ANN.short.char <- as.character(E.ANN.short[,1]+1)
+E.ANN.ramp.char <- as.character(E.ANN.ramp[,1]+1)
+for(i in 1:10) {
+  E.ANN.full.char[E.ANN.full.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.long.char[E.ANN.long.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.short.char[E.ANN.short.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  E.ANN.ramp.char[E.ANN.ramp.char == as.character(i)] <- as.character(levels(Etrain$transgenic_line)[i])
+  
+  }
+
+accu_E <- NA
+
+merging_eline <- function(labeled_set) {
+
+  labeled_set <- gsub("Cux2-CreERT2", "Cux2&Slc17", labeled_set)
+labeled_set<- gsub("Slc17a6-IRES-Cre", "Cux2&Slc17", labeled_set)
+labeled_set <- gsub("Scnn1a-Tg2-Cre", "Nr5a1&Scnn1a", labeled_set)
+labeled_set <- gsub("Scnn1a-Tg3-Cre", "Nr5a1&Scnn1a", labeled_set)
+labeled_set <- gsub("Nr5a1-Cre", "Nr5a1&Scnn1a", labeled_set)
+labeled_set <- factor(labeled_set)
+return(labeled_set)
+}
+
+for(i in 1:3) {
+  if (models[i] == "ANN") {
+    for(j in 1:4) {
+      modelname <- paste0("E.",models[i],".",input[j],".char")
+      model <- get(modelname)
+      model_factor <- factor(model, levels = levels(Etrain$transgenic_line))
+      cm_table <- confusionMatrix(merging_eline(model_factor), merging_eline(Etest$transgenic_line))
+      fig5data[[j]] <- melt(cm_table$table)
+      accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+      accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+      colnames(accu_each) <- modelname
+      accu_E <- cbind.data.frame(accu_E, accu_each)
+      }
+    }
+  else {
+      for(j in 1:4) {
+        modelname <- (paste0("E.",models[i], ".", input[j],".nocv"))
+        model <- get(modelname)
+        cm_table <- confusionMatrix(merging_eline(predict(model, newdata = Etest)), merging_eline(Etest$transgenic_line))
+        fig5data[[j+(4*(i-1))]] <- melt(cm_table$table)
+        accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+        accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+        colnames(accu_each) <- modelname
+        accu_E <- cbind.data.frame(accu_E, accu_each)
+        }
+  }
+}
+
+
+for(i in 1:12){
+  fig5[[i]]<-ggplot(data = fig5data[[i]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
+  scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "right") +
+  scale_x_discrete(labels=Eline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2")+geom_text(label=fig5data[[i]]$value) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "none") 
+}
+
+fig5[[1]] <- fig5[[1]] + scale_x_discrete(position = "top") + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(x = "Full", y = "ANN") + theme(axis.title = element_text(size = rel(1.5)))
+fig5[[2]] <- fig5[[2]] + scale_x_discrete(position = "top")+labs(x = "Long") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig5[[3]] <- fig5[[3]] + scale_x_discrete(position = "top")+labs(x = "Short") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig5[[4]] <- fig5[[4]] + scale_x_discrete(position = "top")+labs(x = "Ramp") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank(), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig5[[5]] <- fig5[[5]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "LASSO") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
+
+fig5[[8]] <- fig5[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig5[[9]] <- fig5[[9]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "RF") + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig5[[10]] <- fig5[[10]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+fig5[[11]] <- fig5[[11]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig5[[12]] <- fig5[[12]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig5_u_grob <-lapply(fig5, ggplotGrob)
+fig5_u_grob
+fig5_cm <- grid.arrange(grobs = fig5_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
+
+ggsave("figSF3cm_posthocadded.tiff", fig5_cm, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+# Accruay bar chart, accurary date was collected above for-loop
+
+accu_E <- cbind.data.frame(accu_E[2:13])
+accu_E <- as.data.frame(t(accu_E))
+colnames(accu_E) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
+accu_E$Accuracy <- as.numeric(as.character(accu_E$Accuracy))
+accu_E$LowCI <- as.numeric(as.character(accu_E$LowCI))
+accu_E$UpCI <- as.numeric(as.character(accu_E$UpCI))
+accu_E$Input <- factor(accu_E$Input, levels(accu_E$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
+levels(accu_E$Model) <- c("ANN", "LASSO", "RF")
+levels(accu_E$Input) <- c("Full", "Long", "Short", "Ramp")
+
+fig5_b <- ggplot(data = accu_E, aes(Input, Accuracy, fill = Model)) + 
+  geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
+
+  theme_classic() + 
+               labs(x = "", y = "Accuracy") +
+               theme(legend.position = "bottom",
+                     legend.title = element_blank(),
+                     legend.margin=margin(t=-0.7, unit='cm'), 
+                     legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
+               scale_fill_brewer( palette = "Set1")
+
+ggsave("figSF3accubar_posthocadded.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
+
+
+fig5 <- grid.arrange(fig5_cm, fig5_b, ncol = 1, heights = c(2,1))
+
+ggsave("figSF3_posthocadded.tiff", fig5, width = 12, height = 10, units = "in", dpi = 300)
+                          
+```
+
+
+# Draw Figure 6 classification for I tf line, confusion matrix and accuracy bar plot
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+library(ROCR)
+library(magrittr)
+library(caret)
+require(gridExtra)
+library(reshape2)
+
+
+fig6 <-list()
+fig6data <- list()
+
+Iline_name <- c("Chrna2","Gad2","Htr3a","Ndnf", "Nkx2.1","Pvalb","Sst","Vip")
+
+models <- c("ANN", "reg", "rf")
+input <- c("full", "long", "short", "ramp")
+
+
+I.ANN.full.char <- as.character(I.ANN.full[,1]+1)
+I.ANN.long.char <- as.character(I.ANN.long[,1]+1)
+I.ANN.short.char <- as.character(I.ANN.short[,1]+1)
+I.ANN.ramp.char <- as.character(I.ANN.ramp[,1]+1)
+for(i in 1:10) {
+  I.ANN.full.char[I.ANN.full.char == as.character(i)] <- as.character(levels(Itrain$transgenic_line)[i])
+  I.ANN.long.char[I.ANN.long.char == as.character(i)] <- as.character(levels(Itrain$transgenic_line)[i])
+  I.ANN.short.char[I.ANN.short.char == as.character(i)] <- as.character(levels(Itrain$transgenic_line)[i])
+  I.ANN.ramp.char[I.ANN.ramp.char == as.character(i)] <- as.character(levels(Itrain$transgenic_line)[i])
+  
+  }
+
+accu_I <- NA
+
+merging_iline <- function(labeled_set) {
+  labeled_set <- gsub("Vip-IRES-Cre", "Vip", labeled_set)
+  labeled_set<- gsub("Chat-IRES-Cre-neo", "Vip", labeled_set)
+  labeled_set <- factor(labeled_set)
+  return(labeled_set)
+}
+
+for(i in 1:3) {
+  if (models[i] == "ANN") {
+    for(j in 1:4) {
+      modelname <- paste0("I.",models[i],".",input[j],".char")
+      model <- get(modelname)
+      model_factor <- factor(model, levels = levels(Itrain$transgenic_line))
+      cm_table <- confusionMatrix(merging_iline(model_factor),merging_iline(Itest$transgenic_line))
+      fig6data[[j]] <- melt(cm_table$table)
+      accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+      accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+      colnames(accu_each) <- modelname
+      accu_I <- cbind.data.frame(accu_I, accu_each)
+      }
+    }
+  else {
+      for(j in 1:4) {
+        modelname <- (paste0("I.",models[i], ".", input[j],".nocv"))
+        model <- get(modelname)
+        cm_table <- confusionMatrix(merging_iline(predict(model, newdata = Itest)), merging_iline(Itest$transgenic_line))
+        fig6data[[j+(4*(i-1))]] <- melt(cm_table$table)
+        accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+        accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+        colnames(accu_each) <- modelname
+        accu_I <- cbind.data.frame(accu_I, accu_each)
+        }
+  }
+}
+
+
+for(i in 1:12){
+  fig6[[i]]<-ggplot(data = fig6data[[i]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
+  scale_y_discrete(limits = rev(levels(fig6data[[i]]$Reference)), labels=rev(Iline_name), position = "right") +
+  scale_x_discrete(labels=Iline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2")+geom_text(label=fig6data[[i]]$value) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "none") 
+}
+
+fig6[[1]] <- fig6[[1]] + scale_x_discrete(position = "top") + scale_y_discrete(limits = rev(levels(fig6data[[i]]$Reference)), labels=rev(Iline_name), position = "left") + labs(x = "Full", y = "ANN") + theme(axis.title = element_text(size = rel(1.5)))
+fig6[[2]] <- fig6[[2]] + scale_x_discrete(position = "top")+labs(x = "Long") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig6[[3]] <- fig6[[3]] + scale_x_discrete(position = "top")+labs(x = "Short") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig6[[4]] <- fig6[[4]] + scale_x_discrete(position = "top")+labs(x = "Ramp") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank(), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig6[[5]] <- fig6[[5]] + scale_y_discrete(limits = rev(levels(fig6data[[i]]$Reference)), labels=rev(Iline_name), position = "left") + labs(y = "LASSO") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
+
+fig6[[8]] <- fig6[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig6[[9]] <- fig6[[9]] + scale_y_discrete(limits = rev(levels(fig6data[[i]]$Reference)), labels=rev(Iline_name), position = "left") + labs(y = "RF") + scale_x_discrete(labels=Iline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig6[[10]] <- fig6[[10]] + scale_x_discrete(labels=Iline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+fig6[[11]] <- fig6[[11]] + scale_x_discrete(labels=Iline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig6[[12]] <- fig6[[12]] + scale_x_discrete(labels=Iline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig6_u_grob <-lapply(fig6, ggplotGrob)
+fig6_u_grob
+fig6_cm <- grid.arrange(grobs = fig6_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
+
+ggsave("figSF4cm_posthocadded.tiff", fig6_cm, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+# Accruay bar chart, accurary date was collected above for-loop
+
+accu_I <- cbind.data.frame(accu_I[2:13])
+accu_I <- as.data.frame(t(accu_I))
+colnames(accu_I) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
+accu_I$Accuracy <- as.numeric(as.character(accu_I$Accuracy))
+accu_I$LowCI <- as.numeric(as.character(accu_I$LowCI))
+accu_I$UpCI <- as.numeric(as.character(accu_I$UpCI))
+accu_I$Input <- factor(accu_I$Input, levels(accu_I$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
+levels(accu_I$Model) <- c("ANN", "LASSO", "RF")
+levels(accu_I$Input) <- c("Full", "Long", "Short", "Ramp")
+
+fig6_b <- ggplot(data = accu_I, aes(Input, Accuracy, fill = Model)) + 
+  geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
+
+  theme_classic() + 
+               labs(x = "", y = "Accuracy") +
+               theme(legend.position = "bottom",
+                     legend.title = element_blank(),
+                     legend.margin=margin(t=-0.7, unit='cm'), 
+                     legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
+               scale_fill_brewer( palette = "Set1")
+
+ggsave("figSF4accubar_posthocadded.tiff", fig6_b, width = 12, height = 7, units = "in", dpi = 300)
+
+
+fig6 <- grid.arrange(fig6_cm, fig6_b, ncol = 1, heights = c(2,1))
+
+ggsave("figSF4_posthocadded.tiff", fig6, width = 12, height = 10, units = "in", dpi = 300)
+```
+
+
+
+
+
+
+
