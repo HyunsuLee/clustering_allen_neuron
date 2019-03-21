@@ -9,11 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Data load
+# Data load(not merged Tg line)
 ```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_revised_data")
-
-cre_na_omitted <- read.csv("cre_na_omitted.csv", row.names = "X")
+setwd("../Data_prep/divided_revised_notmerged_data")
 
 Etrain		<- read.csv("Etrain.csv", row.names = "X")
 Etrain.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
@@ -30,54 +28,19 @@ Itrain.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
 Itrain.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
 Itrain.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
 
-Itest		<- read.csv("Itest.csv", row.names = "X")
+Itest	 <- read.csv("Itest.csv", row.names = "X")
 Itest.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
 Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
 Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
 
-Ltrain		<- read.csv("Ltrain.csv", row.names = "X")
-Ltrain.l	<- read.csv("Ltrain_long.csv", header = T, row.names = "X")
-Ltrain.s	<- read.csv("Ltrain_short.csv", header = T, row.names = "X")
-Ltrain.r	<- read.csv("Ltrain_ramp.csv", header = T, row.names = "X")
-
-Ltest		<- read.csv("Ltest.csv", row.names = "X")
-Ltest.l		<- read.csv("Ltest_long.csv", header = T, row.names = "X")
-Ltest.s		<- read.csv("Ltest_short.csv", header = T, row.names = "X")
-Ltest.r		<- read.csv("Ltest_ramp.csv", header = T, row.names = "X")
-```
-
-# Data load(not merged Tg line)
-```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_revised_notmerged_data")
-
-Etrain_n		<- read.csv("Etrain.csv", row.names = "X")
-Etrain_n.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
-Etrain_n.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
-Etrain_n.r	<- read.csv("Etrain_ramp.csv", header = T, row.names = "X")
-
-Etest_n		<- read.csv("Etest.csv", row.names = "X")
-Etest_n.l		<- read.csv("Etest_long.csv", header = T, row.names = "X")
-Etest_n.s		<- read.csv("Etest_short.csv", header = T, row.names = "X")
-Etest_n.r		<- read.csv("Etest_ramp.csv", header = T, row.names = "X")
-
-Itrain_n		<- read.csv("Itrain.csv", row.names = "X")
-Itrain_n.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
-Itrain_n.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
-Itrain_n.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
-
-Itest_n		<- read.csv("Itest.csv", row.names = "X")
-Itest_n.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
-Itest_n.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
-Itest_n.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
-
-levels(Etest_n$transgenic_line) <- levels(Etrain_n$transgenic_line)
+levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
 ```
 
 # Binary classification
 
 ## Load ANN results
 ```{r, message=FALSE, warning=FALSE}
-setwd("../ANN/revised_results")
+setwd("../ANN/revised_notmerged_results")
 
 E.ANN.full <-read.csv("04_4_Eline_full_argmax.csv",header=F) 
 E.ANN.long <-read.csv("05_4_Eline_long_argmax.csv",header=F)
@@ -89,20 +52,16 @@ I.ANN.long <-read.csv("09_4_Iline_long_argmax.csv",header=F)
 I.ANN.short<-read.csv("10_4_Iline_short_argmax.csv",header=F)
 I.ANN.ramp <-read.csv("11_4_Iline_ramp_argmax.csv",header=F)
 
-L.ANN.full <-read.csv("12_4_Lline_full_argmax.csv",header=F) 
-L.ANN.long <-read.csv("13_4_Lline_long_argmax.csv",header=F)
-L.ANN.short<-read.csv("14_4_Lline_short_argmax.csv",header=F)
-L.ANN.ramp <-read.csv("15_4_Lline_ramp_argmax.csv",header=F)
 ```
 
 # Load LASSO and RF models
 ```{r, message=FALSE, warning=FALSE}
 setwd("../lasso_rf/")
 
-model_files <- list.files("./R_models/")
+model_files <- list.files("./R_notmerged_models/")
 
 for (file_name in model_files){
-  load(paste0("./R_models/",file_name))
+  load(paste0("./R_notmerged_models/",file_name))
 } 
 
 
@@ -123,9 +82,8 @@ library(reshape2)
 
 fig5 <-list()
 fig5data <- list()
-levels(Etrain$transgenic_line)
-levels(Etest$transgenic_line)
-Eline_name <- c("Ctgf", "Cux2&Slc17a6","Nr5a1&Scnn1a","Ntsr1","Rbp4","Rorb")
+
+Eline_name <- c("Ctgf", "Cux2", "Nr5a1", "Ntsr1", "Rbp4", "Rorb", "Scnn1a-Tg2", "Scnn1a-Tg3", "Slc17a6")
 
 models <- c("ANN", "reg", "rf")
 input <- c("full", "long", "short", "ramp")
@@ -206,7 +164,7 @@ fig5_u_grob <-lapply(fig5, ggplotGrob)
 fig5_u_grob
 fig5_cm <- grid.arrange(grobs = fig5_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
 
-ggsave("fig5cm.tiff", fig5_cm, width = 12, height = 7, units = "in", dpi = 300)
+ggsave("figSF3cm.tiff", fig5_cm, width = 12, height = 7, units = "in", dpi = 300)
 
 
 
@@ -235,12 +193,12 @@ fig5_b <- ggplot(data = accu_E, aes(Input, Accuracy, fill = Model)) +
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
                scale_fill_brewer( palette = "Set1")
 
-ggsave("fig5accubar.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
+ggsave("figSF3accubar.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
 
 
 fig5 <- grid.arrange(fig5_cm, fig5_b, ncol = 1, heights = c(2,1))
 
-ggsave("fig5.tiff", fig5, width = 12, height = 10, units = "in", dpi = 300)
+ggsave("figSF3.tiff", fig5, width = 12, height = 10, units = "in", dpi = 300)
                           
 ```
 
@@ -339,7 +297,7 @@ fig6_u_grob <-lapply(fig6, ggplotGrob)
 fig6_u_grob
 fig6_cm <- grid.arrange(grobs = fig6_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
 
-ggsave("fig6cm.tiff", fig6_cm, width = 12, height = 7, units = "in", dpi = 300)
+ggsave("figSF4cm.tiff", fig6_cm, width = 12, height = 7, units = "in", dpi = 300)
 
 
 
@@ -368,12 +326,12 @@ fig6_b <- ggplot(data = accu_I, aes(Input, Accuracy, fill = Model)) +
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
                scale_fill_brewer( palette = "Set1")
 
-ggsave("fig6accubar.tiff", fig6_b, width = 12, height = 7, units = "in", dpi = 300)
+ggsave("figSF4accubar.tiff", fig6_b, width = 12, height = 7, units = "in", dpi = 300)
 
 
 fig6 <- grid.arrange(fig6_cm, fig6_b, ncol = 1, heights = c(2,1))
 
-ggsave("fig6.tiff", fig6, width = 12, height = 10, units = "in", dpi = 300)
+ggsave("figSF4.tiff", fig6, width = 12, height = 10, units = "in", dpi = 300)
 ```
 
 

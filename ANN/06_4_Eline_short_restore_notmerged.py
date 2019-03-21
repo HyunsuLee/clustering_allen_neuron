@@ -39,8 +39,8 @@ is_training_holder = tf.placeholder(tf.bool)
 L2beta = tf.placeholder(tf.float32)
 epsilon = 1e-3 # for Batch normalization
 layer1_shape = [11, 10]
-layer2_shape = [10, 8]
-output_shape = [8, 6] 
+layer2_shape = [10, 10]
+output_shape = [10, 9]  
 
 def weight_init(shape, name_for_weight):
     Xavier_init = np.sqrt(2.0) * np.sqrt(2.0 / np.array(shape).sum())
@@ -119,6 +119,6 @@ model_prob = sess.run(tf.nn.softmax(model_eval))
 model_argmax = sess.run(tf.argmax(model_prob, 1))
 label_argmax = sess.run(tf.argmax(testY, 1))
 
-np.savetxt('./revised_normerged_results/06_4_Eline_short_argmax.csv', model_argmax, delimiter=',')
-np.savetxt('./revised_normerged_results/Etest_shortY_argmax.csv', label_argmax, delimiter = ',')
+np.savetxt('./revised_notmerged_results/06_4_Eline_short_argmax.csv', model_argmax, delimiter=',')
+np.savetxt('./revised_notmerged_results/Etest_shortY_argmax.csv', label_argmax, delimiter = ',')
 

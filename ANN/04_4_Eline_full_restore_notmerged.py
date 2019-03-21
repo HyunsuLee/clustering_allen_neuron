@@ -119,6 +119,6 @@ model_prob = sess.run(tf.nn.softmax(model_eval))
 model_argmax = sess.run(tf.argmax(model_prob, 1))
 label_argmax = sess.run(tf.argmax(testY, 1))
 
-np.savetxt('./revised_normerged_results/04_4_Eline_full_argmax.csv', model_argmax, delimiter=',')
-np.savetxt('./revised_normerged_results/EtestY_argmax.csv', label_argmax, delimiter = ',')
+np.savetxt('./revised_notmerged_results/04_4_Eline_full_argmax.csv', model_argmax, delimiter=',')
+np.savetxt('./revised_notmerged_results/EtestY_argmax.csv', label_argmax, delimiter = ',')
 
