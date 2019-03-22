@@ -1,0 +1,214 @@
+---
+title: "Drawing Figure for manuscript"
+author: "incheol, hyunsu"
+date: "July 27, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data load
+```{r, message=FALSE, warning=FALSE}
+setwd("../Data_prep/divided_revised_data")
+
+Ltrain		<- read.csv("Ltrain.csv", row.names = "X")
+Ltrain.l	<- read.csv("Ltrain_long.csv", header = T, row.names = "X")
+Ltrain.s	<- read.csv("Ltrain_short.csv", header = T, row.names = "X")
+Ltrain.r	<- read.csv("Ltrain_ramp.csv", header = T, row.names = "X")
+
+Ltest		<- read.csv("Ltest.csv", row.names = "X")
+Ltest.l		<- read.csv("Ltest_long.csv", header = T, row.names = "X")
+Ltest.s		<- read.csv("Ltest_short.csv", header = T, row.names = "X")
+Ltest.r		<- read.csv("Ltest_ramp.csv", header = T, row.names = "X")
+```
+
+
+# Binary classification
+
+## Load ANN results
+```{r, message=FALSE, warning=FALSE}
+setwd("../ANN/revised_results")
+
+L.ANN.full <-read.csv("12_4_Lline_full_argmax.csv",header=F) 
+L.ANN.long <-read.csv("13_4_Lline_long_argmax.csv",header=F)
+L.ANN.short<-read.csv("14_4_Lline_short_argmax.csv",header=F)
+L.ANN.ramp <-read.csv("15_4_Lline_ramp_argmax.csv",header=F)
+```
+
+# Load LASSO and RF models
+```{r, message=FALSE, warning=FALSE}
+setwd("../lasso_rf/")
+
+model_files <- list.files("./R_models/")
+
+for (file_name in model_files){
+  load(paste0("./R_models/",file_name))
+} 
+
+
+```
+
+
+# Draw Figure 6 classification for Layer exci tf line, 
+# confusion matrix and accuracy bar plot
+```{r, message=FALSE, warning=FALSE}
+require(ggplot2)
+library(ROCR)
+library(magrittr)
+library(caret)
+require(gridExtra)
+library(reshape2)
+library(dplyr)
+
+
+fig7 <-list()
+fig7data <- list()
+levels(Ltrain$L_tg)
+
+Lline_name <- c("L2/3_Cre","L4_Cre","L5_Cre","L6a_Cre", "L6b_Cre")
+
+models <- c("ANN", "reg", "rf")
+input <- c("full", "long", "short", "ramp")
+
+
+L.ANN.full.char <- as.character(L.ANN.full[,1]+1)
+L.ANN.long.char <- as.character(L.ANN.long[,1]+1)
+L.ANN.short.char <- as.character(L.ANN.short[,1]+1)
+L.ANN.ramp.char <- as.character(L.ANN.ramp[,1]+1)
+for(i in 1:10) {
+  L.ANN.full.char[L.ANN.full.char == as.character(i)] <- as.character(levels(Ltrain$L_tg)[i])
+  L.ANN.long.char[L.ANN.long.char == as.character(i)] <- as.character(levels(Ltrain$L_tg)[i])
+  L.ANN.short.char[L.ANN.short.char == as.character(i)] <- as.character(levels(Ltrain$L_tg)[i])
+  L.ANN.ramp.char[L.ANN.ramp.char == as.character(i)] <- as.character(levels(Ltrain$L_tg)[i])
+  
+  }
+
+accu_L <- NA
+
+for(i in 1:3) {
+  if (models[i] == "ANN") {
+    for(j in 1:4) {
+      modelname <- paste0("L.",models[i],".",input[j],".char")
+      model <- get(modelname)
+      model_factor <- factor(model, levels = levels(Ltrain$L_tg))
+      cm_table <- confusionMatrix(model_factor, Ltest$L_tg)
+      fig7data[[j]] <- mutate(group_by(as.data.frame(cm_table$table), Reference),
+                              percentage = Freq/sum(Freq)*100)
+      accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+      accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+      colnames(accu_each) <- modelname
+      accu_L <- cbind.data.frame(accu_L, accu_each)
+      }
+    }
+  else {
+      for(j in 1:4) {
+        modelname <- (paste0("L.",models[i], ".", input[j],".nocv"))
+        model <- get(modelname)
+        cm_table <- confusionMatrix(predict(model, newdata = Ltest), Ltest$L_tg)
+        fig7data[[j+(4*(i-1))]] <- mutate(group_by(as.data.frame(cm_table$table), Reference),
+                              percentage = Freq/sum(Freq)*100)
+        accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
+        accu_each <- rbind.data.frame(accu_each, models[i], input[j])
+        colnames(accu_each) <- modelname
+        accu_L <- cbind.data.frame(accu_L, accu_each)
+        }
+  }
+}
+
+
+for(i in 1:12){
+  fig7[[i]]<-ggplot(data = fig7data[[i]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
+  scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "right") +
+  scale_x_discrete(labels=Lline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig7data[[i]]$Freq) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "none") 
+}
+
+fig7[[1]] <- fig7[[1]] + scale_x_discrete(position = "top") + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "left") + labs(x = "Full", y = "ANN") + theme(axis.title = element_text(size = rel(1.5)))
+fig7[[2]] <- fig7[[2]] + scale_x_discrete(position = "top")+labs(x = "Long") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig7[[3]] <- fig7[[3]] + scale_x_discrete(position = "top")+labs(x = "Short") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank())
+fig7[[4]] <- fig7[[4]] + scale_x_discrete(position = "top")+labs(x = "Ramp") + theme(axis.title = element_text(size = rel(1.5)), axis.title.y = element_blank(), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig7[[5]] <- fig7[[5]] + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "left") + labs(y = "LASSO") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
+
+fig7[[8]] <- fig7[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig7[[9]] <- fig7[[9]] + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "left") + labs(y = "RF") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
+
+fig7[[12]] <- fig7[[12]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+
+fig7_u_grob <-lapply(fig7, ggplotGrob)
+fig7_u_grob
+fig7_cm_wolegend <- grid.arrange(grobs = fig7_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,0.9), widths = c(1, 0.9, 0.9, 1.1))
+
+legend_fig <- ggplot(data = fig7data[[2]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
+  scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "right") +
+  scale_x_discrete(labels=Lline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig7data[[i]]$Freq) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "right") 
+# http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+blankPlot <- ggplot() + geom_blank(aes(1,1)) + 
+  cowplot::theme_nothing()
+
+legend <- get_legend(legend_fig)
+fig7_cm <- grid.arrange(fig7_cm_wolegend, legend, blankPlot,  ncol = 2, heights = c(12, 1), widths = c(12, 0.9))
+
+
+
+# ggsave("fig6cm.tiff", fig7_cm, width = 12, height = 7, units = "in", dpi = 300)
+
+
+
+
+# Accruay bar chart, accurary date was collected above for-loop
+
+accu_L <- cbind.data.frame(accu_L[2:13])
+accu_L <- as.data.frame(t(accu_L))
+colnames(accu_L) <- c("Accuracy", "LowCI", "UpCI", "Model", "Input")
+accu_L$Accuracy <- as.numeric(as.character(accu_L$Accuracy))
+accu_L$LowCI <- as.numeric(as.character(accu_L$LowCI))
+accu_L$UpCI <- as.numeric(as.character(accu_L$UpCI))
+accu_L$Input <- factor(accu_L$Input, levels(accu_L$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
+levels(accu_L$Model) <- c("ANN", "LASSO", "RF")
+levels(accu_L$Input) <- c("Full", "Long", "Short", "Ramp")
+
+fig7_b <- ggplot(data = accu_L, aes(Input, Accuracy, fill = Model)) + 
+  geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
+
+  theme_classic() + 
+               labs(x = "", y = "Accuracy") +
+               theme(legend.position = "bottom",
+                     legend.title = element_blank(),
+                     legend.margin=margin(t=-0.7, unit='cm'), 
+                     legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
+               scale_fill_brewer( palette = "Set1")
+
+# ggsave("fig6accubar.tiff", fig7_b, width = 12, height = 7, units = "in", dpi = 300)
+
+
+fig7 <- grid.arrange(fig7_cm, fig7_b, ncol = 1, heights = c(2,1))
+
+ggsave("fig6.tiff", fig7, width = 12, height = 10, units = "in", dpi = 300)
+```
+
+
+
+
+

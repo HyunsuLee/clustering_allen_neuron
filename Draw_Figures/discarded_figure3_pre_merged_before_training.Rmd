@@ -382,11 +382,11 @@ library(magrittr)
 library(caret)
 require(gridExtra)
 library(reshape2)
+library(dplyr)
 
 
 fig7 <-list()
 fig7data <- list()
-# levels(Itrain$transgenic_line)
 levels(Ltrain$L_tg)
 
 Lline_name <- c("L2/3_Cre","L4_Cre","L5_Cre","L6a_Cre", "L6b_Cre")
@@ -444,7 +444,7 @@ for(i in 1:12){
   fig7[[i]]<-ggplot(data = fig7data[[i]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
   scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "right") +
   scale_x_discrete(labels=Lline_name)  +
-  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2")+geom_text(label=fig7data[[i]]$Freq) + theme(plot.title = element_blank(),
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig7data[[i]]$Freq) + theme(plot.title = element_blank(),
           axis.title = element_blank(),
           axis.text = element_blank(),
           axis.ticks = element_blank(), 
@@ -461,16 +461,37 @@ fig7[[5]] <- fig7[[5]] + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Refe
 
 fig7[[8]] <- fig7[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
 
-fig7[[9]] <- fig7[[9]] + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "left") + labs(y = "RF") + scale_x_discrete(labels=Lline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+fig7[[9]] <- fig7[[9]] + scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "left") + labs(y = "RF") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
 
-fig7[[10]] <- fig7[[10]] + scale_x_discrete(labels=Lline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
-fig7[[11]] <- fig7[[11]] + scale_x_discrete(labels=Lline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
-
-fig7[[12]] <- fig7[[12]] + scale_x_discrete(labels=Lline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+fig7[[12]] <- fig7[[12]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
 
 fig7_u_grob <-lapply(fig7, ggplotGrob)
 fig7_u_grob
-fig7_cm <- grid.arrange(grobs = fig7_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
+fig7_cm_wolegend <- grid.arrange(grobs = fig7_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,0.9), widths = c(1, 0.9, 0.9, 1.1))
+
+legend_fig <- ggplot(data = fig7data[[2]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
+  scale_y_discrete(limits = rev(levels(fig7data[[i]]$Reference)), labels=rev(Lline_name), position = "right") +
+  scale_x_discrete(labels=Lline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig7data[[i]]$Freq) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "right") 
+# http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+blankPlot <- ggplot()+geom_blank(aes(1,1)) + 
+  cowplot::theme_nothing()
+
+legend <- get_legend(legend_fig)
+fig7_cm <- grid.arrange(fig7_cm_wolegend, legend, blankPlot,  ncol = 2, heights = c(12, 1), widths = c(12, 0.9))
+
+
 
 ggsave("fig6cm.tiff", fig7_cm, width = 12, height = 7, units = "in", dpi = 300)
 
