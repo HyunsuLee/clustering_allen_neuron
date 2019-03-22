@@ -78,7 +78,8 @@ library(magrittr)
 library(caret)
 require(gridExtra)
 library(reshape2)
-
+library(dplyr)
+library(scales)
 
 fig5 <-list()
 fig5data <- list()
@@ -121,7 +122,8 @@ for(i in 1:3) {
       model <- get(modelname)
       model_factor <- factor(model, levels = levels(Etrain$transgenic_line))
       cm_table <- confusionMatrix(merging_eline(model_factor), merging_eline(Etest$transgenic_line))
-      fig5data[[j]] <- melt(cm_table$table)
+      fig5data[[j]] <- mutate(group_by(as.data.frame(cm_table$table), Reference),
+                              percentage = Freq/sum(Freq)*100)
       accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
       accu_each <- rbind.data.frame(accu_each, models[i], input[j])
       colnames(accu_each) <- modelname
@@ -133,7 +135,8 @@ for(i in 1:3) {
         modelname <- (paste0("E.",models[i], ".", input[j],".nocv"))
         model <- get(modelname)
         cm_table <- confusionMatrix(merging_eline(predict(model, newdata = Etest)), merging_eline(Etest$transgenic_line))
-        fig5data[[j+(4*(i-1))]] <- melt(cm_table$table)
+        fig5data[[j+(4*(i-1))]] <- mutate(group_by(as.data.frame(cm_table$table), Reference),
+                              percentage = Freq/sum(Freq)*100)
         accu_each <- as.data.frame(cm_table$overall[c(1, 3:4)])
         accu_each <- rbind.data.frame(accu_each, models[i], input[j])
         colnames(accu_each) <- modelname
@@ -144,10 +147,10 @@ for(i in 1:3) {
 
 
 for(i in 1:12){
-  fig5[[i]]<-ggplot(data = fig5data[[i]],aes(x=Prediction, y=Reference), fill=value) + geom_tile(aes(fill=value)) +
+  fig5[[i]]<-ggplot(data = fig5data[[i]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
   scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "right") +
   scale_x_discrete(labels=Eline_name)  +
-  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2")+geom_text(label=fig5data[[i]]$value) + theme(plot.title = element_blank(),
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig5data[[i]]$Freq) + theme(plot.title = element_blank(),
           axis.title = element_blank(),
           axis.text = element_blank(),
           axis.ticks = element_blank(), 
@@ -164,16 +167,42 @@ fig5[[5]] <- fig5[[5]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Refe
 
 fig5[[8]] <- fig5[[8]] + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
 
-fig5[[9]] <- fig5[[9]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "RF") + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+fig5[[9]] <- fig5[[9]] + scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "left") + labs(y = "RF") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank())
 
-fig5[[10]] <- fig5[[10]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
-fig5[[11]] <- fig5[[11]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+# +  scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.title = element_text(size = rel(1.5)), axis.title.x = element_blank(), axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
 
-fig5[[12]] <- fig5[[12]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90), axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+# fig5[[10]] <- fig5[[10]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+# fig5[[11]] <- fig5[[11]] + scale_x_discrete(labels=Eline_name, position = "bottom") + theme(axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90))
+
+fig5[[12]] <- fig5[[12]]  + theme(axis.ticks.y.right = element_line(), axis.text.y.right = element_text(hjust=0, vjust = 0.5))
+# + scale_x_discrete(labels=Eline_name, position = "bottom") axis.ticks.x= element_line(), axis.text.x = element_text(hjust=1, vjust = 0.5, angle = 90),
 
 fig5_u_grob <-lapply(fig5, ggplotGrob)
 fig5_u_grob
-fig5_cm <- grid.arrange(grobs = fig5_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,1.2), widths = c(1, 0.9, 0.9, 1.1))
+fig5_cm_wolegend <- grid.arrange(grobs = fig5_u_grob, ncol = 4, nrow = 3, heights = c(1,0.9,0.9), widths = c(1, 0.9, 0.9, 1.4))
+
+
+legend_fig <- ggplot(data = fig5data[[2]],aes(x=Prediction, y=Reference), fill=percentage) + geom_tile(aes(fill=percentage)) +
+  scale_y_discrete(limits = rev(levels(fig5data[[i]]$Reference)), labels=rev(Eline_name), position = "right") +
+  scale_x_discrete(labels=Eline_name)  +
+  scale_fill_gradient2(mid = "lightgoldenrodyellow", high = "firebrick2", limits = c(0, 100))+geom_text(label=fig5data[[i]]$Freq) + theme(plot.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.background = element_blank(), 
+          legend.position = "right") 
+# http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+blankPlot <- ggplot()+geom_blank(aes(1,1)) + 
+  cowplot::theme_nothing()
+
+legend <- get_legend(legend_fig)
+fig5_cm <- grid.arrange(fig5_cm_wolegend, legend, blankPlot,  ncol = 2, heights = c(12, 1), widths = c(12, 0.9))
 
 ggsave("figSF3cm_posthocadded.tiff", fig5_cm, width = 12, height = 7, units = "in", dpi = 300)
 

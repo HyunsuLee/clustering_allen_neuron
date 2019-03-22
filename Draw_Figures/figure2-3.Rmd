@@ -26,6 +26,21 @@ Btest.l		<- read.csv("Btest_long.csv", header = T, row.names = "X")
 Btest.s		<- read.csv("Btest_short.csv", header = T, row.names = "X")
 Btest.r		<- read.csv("Btest_ramp.csv", header = T, row.names = "X")
 
+Ltrain		<- read.csv("Ltrain.csv", row.names = "X")
+Ltrain.l	<- read.csv("Ltrain_long.csv", header = T, row.names = "X")
+Ltrain.s	<- read.csv("Ltrain_short.csv", header = T, row.names = "X")
+Ltrain.r	<- read.csv("Ltrain_ramp.csv", header = T, row.names = "X")
+
+Ltest		<- read.csv("Ltest.csv", row.names = "X")
+Ltest.l		<- read.csv("Ltest_long.csv", header = T, row.names = "X")
+Ltest.s		<- read.csv("Ltest_short.csv", header = T, row.names = "X")
+Ltest.r		<- read.csv("Ltest_ramp.csv", header = T, row.names = "X")
+```
+
+# Data load(not merged Tg line)
+```{r, message=FALSE, warning=FALSE}
+setwd("../Data_prep/divided_revised_notmerged_data")
+
 Etrain		<- read.csv("Etrain.csv", row.names = "X")
 Etrain.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
 Etrain.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
@@ -45,41 +60,6 @@ Itest		<- read.csv("Itest.csv", row.names = "X")
 Itest.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
 Itest.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
 Itest.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
-
-Ltrain		<- read.csv("Ltrain.csv", row.names = "X")
-Ltrain.l	<- read.csv("Ltrain_long.csv", header = T, row.names = "X")
-Ltrain.s	<- read.csv("Ltrain_short.csv", header = T, row.names = "X")
-Ltrain.r	<- read.csv("Ltrain_ramp.csv", header = T, row.names = "X")
-
-Ltest		<- read.csv("Ltest.csv", row.names = "X")
-Ltest.l		<- read.csv("Ltest_long.csv", header = T, row.names = "X")
-Ltest.s		<- read.csv("Ltest_short.csv", header = T, row.names = "X")
-Ltest.r		<- read.csv("Ltest_ramp.csv", header = T, row.names = "X")
-```
-
-# Data load(not merged Tg line)
-```{r, message=FALSE, warning=FALSE}
-setwd("../Data_prep/divided_revised_notmerged_data")
-
-Etrain_n		<- read.csv("Etrain.csv", row.names = "X")
-Etrain_n.l	<- read.csv("Etrain_long.csv", header = T, row.names = "X")
-Etrain_n.s	<- read.csv("Etrain_short.csv", header = T, row.names = "X")
-Etrain_n.r	<- read.csv("Etrain_ramp.csv", header = T, row.names = "X")
-
-Etest_n		<- read.csv("Etest.csv", row.names = "X")
-Etest_n.l		<- read.csv("Etest_long.csv", header = T, row.names = "X")
-Etest_n.s		<- read.csv("Etest_short.csv", header = T, row.names = "X")
-Etest_n.r		<- read.csv("Etest_ramp.csv", header = T, row.names = "X")
-
-Itrain_n		<- read.csv("Itrain.csv", row.names = "X")
-Itrain_n.l	<- read.csv("Itrain_long.csv", header = T, row.names = "X")
-Itrain_n.s	<- read.csv("Itrain_short.csv", header = T, row.names = "X")
-Itrain_n.r	<- read.csv("Itrain_ramp.csv", header = T, row.names = "X")
-
-Itest_n		<- read.csv("Itest.csv", row.names = "X")
-Itest_n.l		<- read.csv("Itest_long.csv", header = T, row.names = "X")
-Itest_n.s		<- read.csv("Itest_short.csv", header = T, row.names = "X")
-Itest_n.r		<- read.csv("Itest_ramp.csv", header = T, row.names = "X")
 
 ```
 
@@ -354,27 +334,8 @@ fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) +
   theme(legend.position = "top", axis.text.x = element_blank())
 
 
-levels(Etest_n$transgenic_line) <- levels(Etrain_n$transgenic_line)
+levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
 
-Etrain_n_freq <- as.data.frame(prop.table(table(Etrain_n$transgenic_line)))
-Etest_n_freq <- as.data.frame(prop.table(table(Etest_n$transgenic_line)))
-Etrain_n_freq <- cbind(Etrain_n_freq, 'train')
-Etest_n_freq <- cbind(Etest_n_freq, 'test')
-colnames(Etrain_n_freq) <- c("neuron", "probability", "set")
-colnames(Etest_n_freq) <- c("neuron", "probability", "set")
-Epro_n <- rbind(Etrain_n_freq, Etest_n_freq)
-
-fig3_2 <- ggplot(Epro_n, aes(x = set, y = probability, fill = neuron)) + 
-  geom_bar(stat="identity") + 
-  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
-  labs(x = "", y = "", fill  = "excitatory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Epro_n$set))) + 
-  theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks.y = element_blank())
-
-levels(Etrain$transgenic_line) <- c("Ctgf-T2A-dgCre", "Cux&Slc17a6", "Nr5a1&Scnn1a", 
-                                    "Ntsr1-Cre_GN220", "Rbp4-Cre_KL100", "Rorb-IRES2-Cre")
-levels(Etest$transgenic_line) <- c("Ctgf-T2A-dgCre", "Cux&Slc17a6", "Nr5a1&Scnn1a", 
-                                    "Ntsr1-Cre_GN220", "Rbp4-Cre_KL100", "Rorb-IRES2-Cre")
 
 Etrain_freq <- as.data.frame(prop.table(table(Etrain$transgenic_line)))
 Etest_freq <- as.data.frame(prop.table(table(Etest$transgenic_line)))
@@ -388,24 +349,10 @@ fig3_3 <- ggplot(Epro, aes(x = set, y = probability, fill = neuron)) +
   geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
   labs(x = "", y = "", fill  = "excitatory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Epro_n$set))) + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Epro$set))) + 
   theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks.y = element_blank())
 
 
-Itrain_n_freq <- as.data.frame(prop.table(table(Itrain_n$transgenic_line)))
-Itest_n_freq <- as.data.frame(prop.table(table(Itest_n$transgenic_line)))
-Itrain_n_freq <- cbind(Itrain_n_freq, 'train')
-Itest_n_freq <- cbind(Itest_n_freq, 'test')
-colnames(Itrain_n_freq) <- c("neuron", "probability", "set")
-colnames(Itest_n_freq) <- c("neuron", "probability", "set")
-Ipro_n <- rbind(Itrain_n_freq, Itest_n_freq)
-
-fig3_4 <- ggplot(Ipro_n, aes(x = set, y = probability, fill = neuron)) + 
-  geom_bar(stat="identity") + 
-  theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
-  labs(x = "", fill = "inhibitory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
-  theme(legend.position = "top", axis.ticks.y = element_blank())
 
 
 Itrain_freq <- as.data.frame(prop.table(table(Itrain$transgenic_line)))
@@ -419,9 +366,9 @@ Ipro <- rbind(Itrain_freq, Itest_freq)
 fig3_5 <- ggplot(Ipro, aes(x = set, y = probability, fill = neuron)) + 
   geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
-  labs(x = "", fill = "inhibitory line") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
-  theme(legend.position = "top", axis.ticks.y = element_blank())
+  labs(x = "", y="", fill = "inhibitory line") + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro$set))) + 
+  theme(legend.position = "top",axis.text.x = element_blank(), axis.ticks.y = element_blank())
 
 levels(Ltrain$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
 levels(Ltest$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
@@ -438,14 +385,13 @@ fig3_6 <- ggplot(Lpro, aes(x = set, y = probability, fill = neuron)) +
   geom_bar(stat="identity") + 
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Spectral") +
   labs(x = "", fill = "layer location of excitary neuron restricted to Cre") + 
-  coord_flip() + scale_x_discrete(limits = rev(levels(Ipro_n$set))) + 
+  coord_flip() + scale_x_discrete(limits = rev(levels(Lpro$set))) + 
   theme(legend.position = "top", axis.ticks.y = element_blank())
 
-fig3_6
 
-fig3 <- grid.arrange(fig3_1, fig3_2, fig3_3, fig3_4, fig3_5, fig3_6, ncol = 1)
+fig3 <- grid.arrange(fig3_1, fig3_3, fig3_5, fig3_6, ncol = 1)
 
-ggsave("SF2.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
+ggsave("SF2_n.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
 ```
 
 # Binary classification
