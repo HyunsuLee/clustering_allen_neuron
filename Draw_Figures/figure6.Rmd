@@ -198,7 +198,7 @@ fig7_b <- ggplot(data = accu_L, aes(Input, Accuracy, fill = Model)) +
                      legend.title = element_blank(),
                      legend.margin=margin(t=-0.7, unit='cm'), 
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
-               scale_fill_brewer( palette = "Set1")
+               scale_fill_brewer( palette = "Set1") + ylim(0, 0.85)
 
 # ggsave("fig6accubar.tiff", fig7_b, width = 12, height = 7, units = "in", dpi = 300)
 

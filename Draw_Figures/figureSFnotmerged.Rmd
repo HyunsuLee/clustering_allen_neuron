@@ -212,7 +212,7 @@ fig5_b <- ggplot(data = accu_E, aes(Input, Accuracy, fill = Model)) +
                      legend.title = element_blank(),
                      legend.margin=margin(t=-0.7, unit='cm'), 
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
-               scale_fill_brewer( palette = "Set1")
+               scale_fill_brewer( palette = "Set1") + ylim(0, 0.85)
 
 # ggsave("figSF3accubar.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -359,7 +359,7 @@ accu_I$UpCI <- as.numeric(as.character(accu_I$UpCI))
 accu_I$Input <- factor(accu_I$Input, levels(accu_I$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
 levels(accu_I$Model) <- c("ANN", "LASSO", "RF")
 levels(accu_I$Input) <- c("Full", "Long", "Short", "Ramp")
-
+accu_I
 fig6_b <- ggplot(data = accu_I, aes(Input, Accuracy, fill = Model)) + 
   geom_bar(stat = "identity", color = "black", position = position_dodge()) +
   geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
@@ -370,7 +370,7 @@ fig6_b <- ggplot(data = accu_I, aes(Input, Accuracy, fill = Model)) +
                      legend.title = element_blank(),
                      legend.margin=margin(t=-0.7, unit='cm'), 
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
-               scale_fill_brewer( palette = "Set1")
+               scale_fill_brewer( palette = "Set1") + ylim(0, 0.85)
 
 # ggsave("figSF4accubar.tiff", fig6_b, width = 12, height = 7, units = "in", dpi = 300)
 

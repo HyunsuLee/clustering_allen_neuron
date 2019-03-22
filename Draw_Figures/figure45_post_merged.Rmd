@@ -231,7 +231,7 @@ fig5_b <- ggplot(data = accu_E, aes(Input, Accuracy, fill = Model)) +
                      legend.title = element_blank(),
                      legend.margin=margin(t=-0.7, unit='cm'), 
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
-               scale_fill_brewer( palette = "Set1")
+               scale_fill_brewer( palette = "Set1") + ylim(0, 0.85)
 
 # ggsave("figSF3accubar_posthocadded.tiff", fig5_b, width = 12, height = 7, units = "in", dpi = 300)
 
@@ -395,10 +395,10 @@ fig6_b <- ggplot(data = accu_I, aes(Input, Accuracy, fill = Model)) +
                      legend.title = element_blank(),
                      legend.margin=margin(t=-0.7, unit='cm'), 
                      legend.text = element_text(margin = margin(l = 5, r = 10, unit = "pt"))) +
-               scale_fill_brewer( palette = "Set1")
+               scale_fill_brewer( palette = "Set1") + ylim(0, 0.85)
 
 # ggsave("figSF4accubar_posthocadded.tiff", fig6_b, width = 12, height = 7, units = "in", dpi = 300)
-
+fig6_b
 
 fig6 <- grid.arrange(fig6_cm, fig6_b, ncol = 1, heights = c(2,1))
 
