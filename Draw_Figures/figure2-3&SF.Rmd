@@ -521,7 +521,7 @@ reg_full_ROC <- Broc(B.reg.full.nocv, Btest)$ROC
 rf_full_ROC <- Broc(B.rf.full.nocv, Btest)$ROC
 
 
-full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, rho_ROC)
+full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, rho_short_ROC)
 
  
 levels(full_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.full)$AUC, ")"),
@@ -653,7 +653,7 @@ for(i in 1:3) {
 }
 
 
-rho_CM <- confusionMatrix(as.factor(abs(round(preds_rho_long)-1)+1),   as.factor(as.integer(cre_na_omitted$binary_neuron))) # the ordering of labelling switched
+rho_CM <- confusionMatrix(as.factor(abs(round(preds_rho_short)-1)+1),   as.factor(as.integer(cre_na_omitted$binary_neuron))) # the ordering of labelling switched
 rho_Accu <- rho_CM$overall[c(1,3:4)]
 
 accu_binary <- cbind.data.frame(accu_binary[2:13])
@@ -666,8 +666,9 @@ accu_binary$Input <- factor(accu_binary$Input, levels(accu_binary$Input)[c(1,2,4
 levels(accu_binary$Model) <- c("ANN", "LASSO", "RF")
 levels(accu_binary$Input) <- c("Full", "Long", "Short", "Ramp")
 
-fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) + 
+fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) +
   geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+  coord_cartesian(ylim = c(0.6, 1.0)) +
   geom_errorbar(aes(ymin= LowCI, ymax = UpCI), width= 0.2, position = position_dodge(0.9)) +
   geom_hline(aes(yintercept=rho_Accu[1]), color = "purple") +
   geom_hline(aes(yintercept=rho_Accu[2]), color = "purple", linetype = "dashed") +
@@ -677,8 +678,9 @@ fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) +
                theme(legend.position = "right",
                      legend.title = element_blank(),
                      legend.text.align = 1) +
-               scale_fill_brewer( palette = "Set1")
-
+               scale_fill_brewer( palette = "Set1") 
+                                                           
+fig4b
 fig4 <- grid.arrange(fig4t, fig4b, ncol = 1, heights = c(1.7,1))
 
 ggsave("fig3.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
