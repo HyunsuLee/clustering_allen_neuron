@@ -320,8 +320,12 @@ require(gridExtra)
 
 Btrain_freq <- as.data.frame(prop.table(table(Btrain$binary)))
 Btest_freq <- as.data.frame(prop.table(table(Btest$binary)))
-Btrain_freq <- cbind(Btrain_freq, 'train')
-Btest_freq <- cbind(Btest_freq, 'test')
+Btrain_freq <- cbind(Btrain_freq, paste0("train (",sum(table(Btrain$binary)),")") )
+Btrain_freq <- cbind(Btrain_freq,table(Btrain$binary))
+                     
+Btest_freq <- cbind(Btest_freq, paste0("test (",sum(table(Btest$binary)),")"))
+Btest_freq <- cbind(Btest_freq,table(Btest$binary))
+
 colnames(Btrain_freq) <- c("neuron", "probability", "set")
 colnames(Btest_freq) <- c("neuron", "probability", "set")
 Bpro <- rbind(Btrain_freq, Btest_freq)
@@ -331,7 +335,7 @@ fig3_1 <- ggplot(Bpro, aes(x = set, y = probability, fill = neuron)) +
   theme_minimal() + scale_fill_brewer(type = "seq", palette = "Paired") +
   labs(x = "", y = "", fill = "") + 
   coord_flip() + scale_x_discrete(limits = rev(levels(Bpro$set))) + # xy axis swap and reverse order of set
-  theme(legend.position = "top", axis.text.x = element_blank())
+  theme(legend.position = "bottom", axis.text.x = element_blank()) 
 
 
 levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
@@ -391,7 +395,11 @@ fig3_6 <- ggplot(Lpro, aes(x = set, y = probability, fill = neuron)) +
 
 fig3 <- grid.arrange(fig3_1, fig3_3, fig3_5, fig3_6, ncol = 1)
 
-ggsave("SF2_n.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
+#ggsave("SF2_n.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
+
+### modified
+ggsave("SF2_n_modified.pdf", fig3, width = 10, height = 10, units = "in")
+###
 ```
 
 # Binary classification
@@ -550,7 +558,7 @@ long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC, rho_long_ROC)
 
 levels(long_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.long)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.long.nocv, Btest)$AUC, ")"),
-                            paste0("RF(", Broc(B.rf.long.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", format(Broc(B.rf.long.nocv, Btest)$AUC,nsmall=4), ")"),
                             paste0("$\\rho^{long}$(", rho_long_auc, ")"))
 
 fig4_2 <- ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line() +
@@ -681,7 +689,7 @@ fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) +
 
 fig4 <- grid.arrange(fig4t, fig4b, ncol = 1, heights = c(1.7,1))
 
-ggsave("fig3.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
+ggsave("fig3_test.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
 
 ```
 
