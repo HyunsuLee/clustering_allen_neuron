@@ -151,7 +151,7 @@ fig2_12 <- ggplot(data = sag,
   scale_x_discrete(labels = parse(text =TeX(unique(sag$variable)))) + 
   theme(axis.title.y = element_text(size = rel(0.7))) + 
   scale_fill_discrete(name = "", labels = c("E", "I")) +
-  theme(legend.text = element_text(size = rel(0.5)))
+  theme(legend.text = element_text(size = rel(0.7)))
 
 fig2_1 <- grid.arrange(fig2_11, fig2_12, widths = c(10, 2), nrow = 1)
 
@@ -253,7 +253,15 @@ fig2_4 <- grid.arrange(fig2_41, fig2_42, fig2_43, widths = c(3,4,3), nrow = 1)
 # arrange violin plots
 fig2_l <- grid.arrange(fig2_1, fig2_2, fig2_3, fig2_4, ncol = 1)
 
+ggsave("fig2_revised_modified.pdf", fig2_l, width = 10, height = 7.4, units = "in")
+```
+
+```{r}
+
+
 # for heatmap, correlation matrix
+
+library(RColorBrewer)
 
 fig2data_numeric <- subset(fig2data, select = -c(binary_neuron))
 
@@ -286,7 +294,7 @@ cormat_posneg <- cor(fig2data_numeric)
 cormat <- abs(cormat_posneg) 
 reorder_cormat <- function(cormat){
 # Use correlation between variables as distance
-   dd <- as.dist((1-cormat))
+   dd <- as.dist((1-cormat)/2)
    hc <- hclust(dd, method = "centroid")
    cormat <-cormat[hc$order, hc$order]
 }
@@ -296,19 +304,24 @@ melted_fig2b<-melt(cormat)
 melted_fig2b$Var1 <- factor(melted_fig2b$Var1, levels=unique(as.character(melted_fig2b$Var1)))
 melted_fig2b$Var2 <- factor(melted_fig2b$Var2, levels=unique(as.character(melted_fig2b$Var2)))
 fig2_r <- ggplot(data=melted_fig2b, aes(Var1, Var2, fill=value)) + 
-      geom_tile() + scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "lightgoldenrodyellow", 
-                    midpoint = 0, limit = c(0,1), space = "Lab", name="r") +
+      geom_tile() + #scale_fill_gradient2(low = "darkolivegreen4", high = "firebrick2", mid = "",                  midpoint = 0.5, limit = c(0,1), space = "Lab", name="Pearson's r") +
+      scale_fill_gradientn(colors= brewer.pal(7,"YlOrRd"),limits=c(0,1), name="Pearson's r") +
       labs(x = "", y = "")+
       theme(legend.position = "bottom") + 
       scale_y_discrete(position = "right", labels = parse(text =TeX(unique(melted_fig2b$Var1)))) + 
-      theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.ticks.y = element_blank()) +
-      theme(axis.title.y = element_text(size = rel(0.7)))
+  scale_x_discrete(position = "bottom", labels = parse(text =TeX(unique(melted_fig2b$Var1)))) +
+      theme(axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) +
+      theme(axis.text = element_text(size = rel(0.5)), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5),panel.grid=element_blank() ) + guides(fill = guide_colorbar(title.theme=element_text(size=8), title.position =  "top", title.hjust = 0.5, label.theme=element_text(size=6)))
+
 
 # fig2<- grid.arrange(fig2_l, fig2_r, widths = c(1.6,1), nrow = 1)
 
 # ggsave("fig2.tiff",fig2, width=11, height=7, units ="in", dpi = 300)
-ggsave("fig2_revised.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
-ggsave("SF1_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
+#ggsave("fig2_revised.tiff", fig2_l, width = 11, height = 7, units = "in", dpi = 300)
+#ggsave("SF1_heatmap.tiff", fig2_r, width = 7, height = 7, units = "in", dpi = 300)
+
+
+ggsave("SF1_heatmap_modified.pdf", fig2_r, width = 7.4, height = 8, units = "in")
 
 ```
 
@@ -396,9 +409,73 @@ fig3_6 <- ggplot(Lpro, aes(x = set, y = probability, fill = neuron)) +
 fig3 <- grid.arrange(fig3_1, fig3_3, fig3_5, fig3_6, ncol = 1)
 
 #ggsave("SF2_n.tiff", fig3, width = 10, height = 10, units = "in", dpi = 300)
+```
 
-### modified
-ggsave("SF2_n_modified.pdf", fig3, width = 10, height = 10, units = "in")
+```{r}
+# figure SF2_n modified 
+# df generation
+Bpro <- melt(data.frame(type=names(table(Btrain$binary)),train=as.numeric(table(Btrain$binary)),test=as.numeric(table(Btest$binary))))
+Bpro$pct <- Bpro$value/ave(Bpro$value,Bpro$variable,FUN=sum) 
+
+levels(Etest$transgenic_line) <- levels(Etrain$transgenic_line)
+Epro <- melt(data.frame(type=names(table(Etrain$transgenic_line)),train=as.numeric(table(Etrain$transgenic_line)),test=as.numeric(table(Etest$transgenic_line))))
+Epro$pct <- Epro$value/ave(Epro$value,Epro$variable,FUN=sum) 
+
+Ipro <- melt(data.frame(type=names(table(Itrain$transgenic_line)),train=as.numeric(table(Itrain$transgenic_line)),test=as.numeric(table(Itest$transgenic_line))))
+Ipro$pct <- Ipro$value/ave(Ipro$value,Ipro$variable,FUN=sum) 
+
+levels(Ltrain$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
+levels(Ltest$L_tg) <- c("L2/3_Cre", "L4_Cre", "L5_Cre", "L6a_Cre", "L6b_Cre")
+Lpro <- melt(data.frame(type=names(table(Ltrain$L_tg)),train=as.numeric(table(Ltrain$L_tg)),test=as.numeric(table(Ltest$L_tg))))
+Lpro$pct <- Lpro$value/ave(Lpro$value,Lpro$variable,FUN=sum) 
+
+
+# figure generation
+figsf2 <- list()
+figsf2[[1]] <- ggplot(Bpro, aes(x = variable, y = pct, fill = type)) + 
+             scale_x_discrete(limits = rev(levels(Bpro$variable)), labels=c(paste0("Test (", aggregate(Bpro$value, by=list(Category=Bpro$variable), FUN=sum)[2,2],")"), paste0("Train (", aggregate(Bpro$value, by=list(Category=Bpro$variable), FUN=sum)[1,2],")"))) + ggtitle("Entire dataset")
+
+figsf2[[2]] <- ggplot(Epro, aes(x = variable, y = pct, fill = type)) + 
+             scale_x_discrete(limits = rev(levels(Epro$variable)), labels=c(paste0("Test (", aggregate(Epro$value, by=list(Category=Epro$variable), FUN=sum)[2,2],")"), paste0("Train (", aggregate(Epro$value, by=list(Category=Epro$variable), FUN=sum)[1,2],")"))) + ggtitle("Excitatory lines")
+
+figsf2[[3]] <- ggplot(Ipro, aes(x = variable, y = pct, fill = type)) + 
+             scale_x_discrete(limits = rev(levels(Ipro$variable)), labels=c(paste0("Test (", aggregate(Ipro$value, by=list(Category=Ipro$variable), FUN=sum)[2,2],")"), paste0("Train (", aggregate(Ipro$value, by=list(Category=Ipro$variable), FUN=sum)[1,2],")"))) + ggtitle("Inhibitory lines")
+
+figsf2[[4]] <- ggplot(Lpro, aes(x = variable, y = pct, fill = type)) + 
+             scale_x_discrete(limits = rev(levels(Lpro$variable)), labels=c(paste0("Test (", aggregate(Lpro$value, by=list(Category=Lpro$variable), FUN=sum)[2,2],")"), paste0("Train (", aggregate(Lpro$value, by=list(Category=Lpro$variable), FUN=sum)[1,2],")"))) + ggtitle("Layer location of excitatory neuron restricted to Cre")
+
+# figure code shared
+fontsize=12
+theme_set(theme_minimal(base_size = fontsize)) 
+
+for (i in 1:4) {  figsf2[[i]] <- figsf2[[i]] +
+    geom_bar(stat="identity")  + 
+    geom_text(aes(label=value), position = position_stack(vjust = 0.5), size=3) +
+    scale_fill_brewer(type = "seq", palette = "Paired") + coord_flip() +
+    labs(x = "", y = "", fill = "") + 
+    theme(legend.position = "bottom",
+          axis.text.x = element_blank(),
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-20,-10,20,-10),
+          panel.grid=element_blank(),
+          legend.text=element_text(size=rel(0.7)), 
+          plot.title=element_text(size=rel(0.8),hjust=0.5),
+          axis.text.y = element_text(margin = margin(0,-15,0,10))
+          )+
+    guides(fill=guide_legend(reverse=TRUE))   }
+
+for (i in 2:3) {figsf2[[i]] <- figsf2[[i]] + guides(fill=guide_legend(ncol=3,byrow=TRUE,reverse=TRUE))} 
+figsf2[[1]] <- figsf2[[1]] + theme(axis.text.x=element_text(size=rel(0.5)), axis.title.x=element_text(size=rel(0.5)),legend.box.margin=margin(0,-10,20,-10)) + ylab("Proportion")
+
+# save
+library(ggpubr)
+gt <- arrangeGrob(figsf2[[1]],figsf2[[2]],figsf2[[3]],figsf2[[4]], ncol = 1, nrow = 4, 
+             layout_matrix = rbind(1,2,3,4), heights=c(1.18,1.4,1.4,1))
+
+p <- as_ggplot(gt) +                                # transform to a ggplot
+  draw_plot_label(label = c("A", "B", "C","D"), size = 12,
+                  x = c(0,0,0,0), y = c(1,0.763,0.482,0.201)) #
+ggsave("SF2_n_modified.pdf", p, width = 7.4, height = 8, units = "in")
 ###
 ```
 
@@ -534,7 +611,7 @@ full_ROC <- rbind(ANN_full_ROC, reg_full_ROC, rf_full_ROC, rho_short_ROC)
  
 levels(full_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.full)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.full.nocv, Btest)$AUC, ")"),
-                            paste0("RF(", Broc(B.rf.full.nocv, Btest)$AUC, ")"),
+                            paste0("RF(", format(Broc(B.rf.full.nocv, Btest)$AUC,nsmall=4), ")"),
                             paste0("$\\rho^{short}$(", rho_short_auc, ")"))
 
 fig4_1 <- ggplot(data=full_ROC, aes(fpr, tpr, color = model)) + geom_line() +
@@ -559,7 +636,7 @@ long_ROC <- rbind(ANN_long_ROC, reg_long_ROC, rf_long_ROC, rho_long_ROC)
 levels(long_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.long)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.long.nocv, Btest)$AUC, ")"),
                             paste0("RF(", format(Broc(B.rf.long.nocv, Btest)$AUC,nsmall=4), ")"),
-                            paste0("$\\rho^{long}$(", rho_long_auc, ")"))
+                            paste0("$\\rho^{long}$(", format(rho_long_auc,nsmall=4), ")"))
 
 fig4_2 <- ggplot(data = long_ROC, aes(fpr, tpr, color = model)) + geom_line() +
                geom_abline(aes(intercept=0, slope=1), linetype="dashed") +
@@ -605,7 +682,7 @@ ramp_ROC <- rbind(ANN_ramp_ROC, reg_ramp_ROC, rf_ramp_ROC, rho_ramp_ROC)
 levels(ramp_ROC$model) <- c(paste0("ANN(", BrocANN(B.ANN.ramp)$AUC, ")"),
                             paste0("LASSO(", Broc(B.reg.ramp.nocv, Btest)$AUC, ")"),
                             paste0("RF(", Broc(B.rf.ramp.nocv, Btest)$AUC, ")"),
-                            paste0("$\\rho^{ramp}$(", rho_ramp_auc, ")"))
+                            paste0("$\\rho^{ramp}$(", format(rho_ramp_auc,nsmall=4), ")"))
 
 
 
@@ -671,7 +748,7 @@ accu_binary$Accuracy <- as.numeric(as.character(accu_binary$Accuracy))
 accu_binary$LowCI <- as.numeric(as.character(accu_binary$LowCI))
 accu_binary$UpCI <- as.numeric(as.character(accu_binary$UpCI))
 accu_binary$Input <- factor(accu_binary$Input, levels(accu_binary$Input)[c(1,2,4,3)]) # reorder levels of input from alphabetical to experimental, to match with previous curves
-levels(accu_binary$Model) <- c("ANN", "LASSO", "RF")
+levels(accu_binary$Model) <- c("  ANN", "  LASSO", "  RF")
 levels(accu_binary$Input) <- c("Full", "Long", "Short", "Ramp")
 
 fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) +
@@ -685,13 +762,24 @@ fig4b <- ggplot(data = accu_binary, aes(Input, Accuracy, fill = Model)) +
                labs(x = "", y = "Accuracy") +
                theme(legend.position = "right",
                      legend.title = element_blank(),
-                     legend.text.align = 1) +
+                     legend.text.align = 0,
+                     axis.title.y = element_text(margin = margin(0,0,0,20))) +
                scale_fill_brewer( palette = "Set1") 
                                                            
 fig4b
 fig4 <- grid.arrange(fig4t, fig4b, ncol = 1, heights = c(1.7,1))
 
-ggsave("fig3_test.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
+#ggsave("fig3.tiff", fig4, width = 7, height = 10, units = "in", dpi = 300)
+
+
+library(ggpubr)
+gt <- arrangeGrob(fig4t, fig4b, ncol = 1, nrow = 2, 
+             layout_matrix = rbind(1,2), heights=c(1.7,1))
+
+p <- as_ggplot(gt) +                                # transform to a ggplot
+  draw_plot_label(label = c("A", "B"), size = 15,
+                  x = c(0,0,0,0), y = c(1,0.37)) #
+ggsave("fig3_modified.pdf", p, width = 7.4, height = 10, units = "in")
 
 ```
 
