@@ -1,6 +1,7 @@
 # Clustering neuron from allen db
 
-for 2nd paper using allen db, clustering neurons with MLs, collaborating incheol.
+* for 2nd paper using allen db, clustering neurons with MLs, collaborating incheol.
+* [our paper](https://mail.google.com/mail/u/0/#inbox/FMfcgxwDqfMPDTDDBtlxZlQmdWVtcbSJ) was published at Brain Research Bulletin 
 
 ## Data pipeline
 
